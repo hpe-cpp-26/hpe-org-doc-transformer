@@ -222,4 +222,14 @@ Come up with a **project plan and architecture** for solving this problem.
   - Get similarity score
   - If similar — update the path of the new/updated document to the relevant group
 
+  ### First Phase of Project Implementation
+
+![Project Architecture](https://github.com/nihalshetty3/SampleMainProject/blob/main/project/DataIngestion.jpeg?raw=true)
+
+This image represents the initial working implementation of our proposed architecture.  
+It focuses on the first phase of the pipeline where webhook events are captured, processed, and routed through queues.  
+The objective was to validate real-time document sync, event flow, and service communication.  
+This serves as the foundation for the complete AI-powered knowledge integration system.
+
+
 _Last updated: April 2026_
