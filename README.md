@@ -170,7 +170,7 @@ Come up with a **project plan and architecture** for solving this problem.
 
 ---
 
-## Week 6 — Main Project: Architecture & Design
+## Week 6 — Transforming Organisational Docs Using Doc AI Agent
 
 **`4/1/2026 – 4/8/2026`**
 
