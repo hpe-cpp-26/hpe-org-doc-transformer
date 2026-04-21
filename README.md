@@ -224,7 +224,7 @@ Come up with a **project plan and architecture** for solving this problem.
 
   ### First Phase of Project Implementation
 
-![Project Architecture](https://github.com/nihalshetty3/SampleMainProject/blob/main/project/DataIngestion.jpeg?raw=true)
+![Project Architecture](https://raw.githubusercontent.com/nihalshetty3/Hpe-mini-project/main/FirstPhaseArch.png)
 
 This image represents the initial working implementation of our proposed architecture.  
 It focuses on the first phase of the pipeline where webhook events are captured, processed, and routed through queues.  
