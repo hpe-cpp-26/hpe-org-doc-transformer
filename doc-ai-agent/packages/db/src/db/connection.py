@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-import os
 from contextlib import contextmanager
 from typing import Any, Iterator
 
 import psycopg
 from psycopg import Connection
 from psycopg.rows import dict_row
+
+from config import get_settings
 
 
 class DatabaseConnectionError(RuntimeError):
@@ -17,10 +18,7 @@ _connection: Connection[Any] | None = None
 
 
 def get_database_url() -> str:
-    return os.environ.get(
-        "DATABASE_URL",
-        "postgresql://postgres:postgres@localhost:5432/doc_ai",
-    )
+    return get_settings().database_url
 
 
 def _open_connection() -> Connection[Any]:

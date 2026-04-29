@@ -1,3 +1,4 @@
 from pydantic import BaseModel
 
-class NormalisedDocument(BasModel)
+class NormalisedDocument(BaseModel):
+    pass
