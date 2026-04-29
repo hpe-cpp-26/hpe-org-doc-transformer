@@ -23,9 +23,10 @@ class Settings(BaseSettings):
     service_name: str = "service"
     environment: str = "development"
     log_level: str = "INFO"
-    # log_format: json | json_pretty | formatted
-    log_format: str = "json"
+    log_format: str = "json" 
     database_url: str = "postgresql://postgres:postgres@localhost:5432/doc_ai"
+    ollama_host: str = "http://localhost:11434"
+    embedding_model: str = "nomic-embed-text"   
 
 
 @lru_cache
