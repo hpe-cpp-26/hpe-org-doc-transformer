@@ -8,8 +8,12 @@ authors = [
 ]
 requires-python = ">=3.14"
 dependencies = [
+    "config",
     "psycopg[binary]>=3.2,<4",
 ]
+
+[tool.uv.sources]
+config = { workspace = true }
 
 [build-system]
 requires = ["uv_build>=0.10.12,<0.11.0"]

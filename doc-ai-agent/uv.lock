@@ -22,6 +22,12 @@ members = [
 name = "agent"
 version = "0.1.0"
 source = { virtual = "services/agent" }
+dependencies = [
+    { name = "config" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "config", editable = "packages/config" }]
 
 [[package]]
 name = "annotated-doc"
@@ -57,23 +63,43 @@ wheels = [
 name = "classifier"
 version = "0.1.0"
 source = { virtual = "services/classifier" }
+dependencies = [
+    { name = "config" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "config", editable = "packages/config" }]
 
 [[package]]
 name = "config"
 version = "0.1.0"
 source = { editable = "packages/config" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "pydantic-settings" },
+    { name = "python-dotenv" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "pydantic", specifier = ">=2.6,<3" },
+    { name = "pydantic-settings", specifier = ">=2.2,<3" },
+    { name = "python-dotenv", specifier = ">=1.0,<2" },
+]
 
 [[package]]
 name = "connector"
 version = "0.1.0"
 source = { virtual = "services/connector" }
 dependencies = [
+    { name = "config" },
     { name = "fastapi" },
     { name = "types" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "config", editable = "packages/config" },
     { name = "fastapi", specifier = ">=0.136.1" },
     { name = "types", editable = "packages/types" },
 ]
@@ -83,11 +109,15 @@ name = "db"
 version = "0.1.0"
 source = { editable = "packages/db" }
 dependencies = [
+    { name = "config" },
     { name = "psycopg", extra = ["binary"] },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "psycopg", extras = ["binary"], specifier = ">=3.2,<4" }]
+requires-dist = [
+    { name = "config", editable = "packages/config" },
+    { name = "psycopg", extras = ["binary"], specifier = ">=3.2,<4" },
+]
 
 [[package]]
 name = "doc-ai-agent"
@@ -123,11 +153,23 @@ wheels = [
 name = "mcp-server"
 version = "0.1.0"
 source = { virtual = "services/mcp-server" }
+dependencies = [
+    { name = "config" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "config", editable = "packages/config" }]
 
 [[package]]
 name = "normaliser"
 version = "0.1.0"
 source = { virtual = "services/normaliser" }
+dependencies = [
+    { name = "config" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "config", editable = "packages/config" }]
 
 [[package]]
 name = "psycopg"
@@ -221,6 +263,29 @@ wheels = [
 ]
 
 [[package]]
+name = "pydantic-settings"
+version = "2.14.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "python-dotenv" },
+    { name = "typing-inspection" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/42/98/c8345dccdc31de4228c039a98f6467a941e39558da41c1744fbe29fa5666/pydantic_settings-2.14.0.tar.gz", hash = "sha256:24285fd4b0e0c06507dd9fdfd331ee23794305352aaec8fc4eb92d4047aeb67d", size = 235709, upload-time = "2026-04-20T13:37:40.293Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/01/dd/bebff3040138f00ae8a102d426b27349b9a49acc310fcae7f92112d867e3/pydantic_settings-2.14.0-py3-none-any.whl", hash = "sha256:fc8d5d692eb7092e43c8647c1c35a3ecd00e040fcf02ed86f4cb5458ca62182e", size = 60940, upload-time = "2026-04-20T13:37:38.586Z" },
+]
+
+[[package]]
+name = "python-dotenv"
+version = "1.2.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/82/ed/0301aeeac3e5353ef3d94b6ec08bbcabd04a72018415dcb29e588514bba8/python_dotenv-1.2.2.tar.gz", hash = "sha256:2c371a91fbd7ba082c2c1dc1f8bf89ca22564a087c2c287cd9b662adde799cf3", size = 50135, upload-time = "2026-03-01T16:00:26.196Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0b/d7/1959b9648791274998a9c3526f6d0ec8fd2233e4d4acce81bbae76b44b2a/python_dotenv-1.2.2-py3-none-any.whl", hash = "sha256:1d8214789a24de455a8b8bd8ae6fe3c6b69a5e3d64aa8a8e5d68e694bbcb285a", size = 22101, upload-time = "2026-03-01T16:00:25.09Z" },
+]
+
+[[package]]
 name = "queue"
 version = "0.1.0"
 source = { editable = "packages/queue" }
@@ -281,3 +346,9 @@ source = { editable = "packages/utils" }
 name = "worker"
 version = "0.1.0"
 source = { virtual = "services/worker" }
+dependencies = [
+    { name = "config" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "config", editable = "packages/config" }]
