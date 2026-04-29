@@ -98,6 +98,23 @@ def insert_document(
     )
 
 
+def get_document_assignment(document_id: str) -> tuple[str | None, str | None]:
+    query = "SELECT group_id, path FROM documents WHERE id = %s"
+
+    try:
+        with get_connection() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(query, [document_id])
+                row = cursor.fetchone()
+    except psycopg.Error as exc:
+        raise DatabaseConnectionError("Document lookup failed") from exc
+
+    if not row:
+        return None, None
+
+    return row.get("group_id"), row.get("path")
+
+
 def update_document(
     document_id: str,
     *,
