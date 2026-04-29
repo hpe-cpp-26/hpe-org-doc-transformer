@@ -2,10 +2,11 @@
 
 from embedding import generate_embedding
 from db.vector_queries import search_similar_centroid
-from types import NormalisedDocument, ClassificationResult
+from doc_types.documents import NormalisedDocument, ClassificationResult
 
-from .actions import github_update_readme_and_index, route_to_agent, flag_for_human_review
-from .duplicate_check import check_duplicate_assignment
+from actions import github_update_readme_and_index, route_to_agent, flag_for_human_review
+from duplicate_check import check_duplicate_assignment
+
 
 
 class DocumentClassifier:
