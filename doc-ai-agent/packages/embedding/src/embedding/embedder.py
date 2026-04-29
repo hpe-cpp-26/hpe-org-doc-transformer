@@ -1,18 +1,12 @@
 from typing import Sequence
 
-from config.settings import get_settings
-import requests
 import logging
+import requests
+
+from config.settings import get_settings
 
 logger = logging.getLogger(__name__)
-
-def get_env(name: str) -> str | None:
-    settings = get_settings()
-    return getattr(settings, name, None)
-    
-
-ollama_host = get_env("OLLAMA_HOST")
-model = get_env("EMBEDDING_MODEL")
+settings = get_settings()
 
 def generate_embedding(text: str) -> Sequence[float]:
     """
@@ -31,9 +25,9 @@ def generate_embedding(text: str) -> Sequence[float]:
 
     try:
         response = requests.post(
-            f"{ollama_host}/api/embed",
+            f"{settings.ollama_host}/api/embed",
             json={
-                "model": model,
+                "model": settings.embedding_model,
                 "input": text,
             },
             timeout=60,
@@ -43,7 +37,7 @@ def generate_embedding(text: str) -> Sequence[float]:
     except requests.RequestException as exc:
         logger.error(f"Error connecting to Ollama", extra={"error": str(exc)})
         raise ConnectionError(
-            f"Failed to reach Ollama at {ollama_host}. "
+            f"Failed to reach Ollama at {settings.ollama_host}. "
             "Make sure Ollama is running: ollama serve"
         ) from exc
     
