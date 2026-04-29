@@ -21,9 +21,10 @@ class JsonFormatter(logging.Formatter):
     """
     converts log records into a structured JSON format with additional context information.
     """
-    def __init__(self, context: LoggingContext) -> None:
+    def __init__(self, context: LoggingContext, *, pretty: bool = False) -> None:
         super().__init__()
         self._context = context
+        self._pretty = pretty
 
     def format(self, record: logging.LogRecord) -> str:
         payload: dict[str, Any] = {
@@ -36,6 +37,8 @@ class JsonFormatter(logging.Formatter):
         }
         if record.exc_info:
             payload["exc_info"] = self.formatException(record.exc_info)
+        if self._pretty:
+            return json.dumps(payload, ensure_ascii=True, indent=2, sort_keys=True)
         return json.dumps(payload, ensure_ascii=True)
 
 
@@ -57,8 +60,11 @@ def configure_logging(settings: Settings | None = None) -> None:
     )
 
     handler = logging.StreamHandler()
-    if resolved_settings.log_format.lower() == "json":
+    log_format = resolved_settings.log_format.lower()
+    if log_format == "json":
         handler.setFormatter(JsonFormatter(context))
+    elif log_format in {"json_pretty", "pretty"}:
+        handler.setFormatter(JsonFormatter(context, pretty=True))
     else:
         formatter = logging.Formatter(
             "%(asctime)s %(levelname)s %(name)s %(message)s",

@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     service_name: str = "service"
     environment: str = "development"
     log_level: str = "INFO"
+    # log_format: json | json_pretty | formatted
     log_format: str = "json"
     database_url: str = "postgresql://postgres:postgres@localhost:5432/doc_ai"
 
