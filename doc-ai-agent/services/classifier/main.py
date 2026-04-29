@@ -11,8 +11,8 @@ def main() -> None:
     logger.info("Classifier Service starting")
 """Classifier service - Categorize documents into groups."""
 
-from classifier.classifier import DocumentClassifier
-from types import NormalisedDocument
+from classifier import DocumentClassifier, ClassificationResult
+from doc_types.documents import NormalisedDocument
 
 
 def main():

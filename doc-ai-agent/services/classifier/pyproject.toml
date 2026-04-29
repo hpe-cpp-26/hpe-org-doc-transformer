@@ -6,13 +6,13 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
 	"config",
-    "types",
+    "doc-types",
     "embedding",
     "db",
 ]
 
 [tool.uv.sources]
 config = { workspace = true }
-types = { workspace = true }
+doc-types = { workspace = true }
 embedding = { workspace = true }
 db = { workspace = true }

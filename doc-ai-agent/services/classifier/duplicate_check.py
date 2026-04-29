@@ -4,7 +4,7 @@ import logging
 
 from db.connection import DatabaseConnectionError
 from db.vector_queries import get_document_assignment
-from types import ClassificationResult, NormalisedDocument
+from doc_types.documents import ClassificationResult, NormalisedDocument
 
 
 def check_duplicate_assignment(
