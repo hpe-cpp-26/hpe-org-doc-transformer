@@ -26,6 +26,11 @@ def route_to_agent(document: Any, candidate_groups: Iterable[dict]) -> None:
     print(f"[route_to_agent] document={getattr(document, 'id', 'unknown')} candidates={len(list(candidate_groups))}")
 
 
-def flag_for_human_review(document_id: str, reason: str | None = None) -> None:
-    """Stub: flag document for human review (ticketing, DB flag, etc.)."""
-    print(f"[flag_human_review] document={document_id} reason={reason}")
+# def flag_for_human_review(document_id: str, reason: str | None = None) -> None:
+#     """Stub: flag document for human review (ticketing, DB flag, etc.)."""
+#     print(f"[flag_human_review] document={document_id} reason={reason}")
+
+def create_new_group(document_id: str) -> None:
+    """Stub: create a new group for the document."""
+    print(f"[create_new_group] document={document_id} - new group created")
+    
