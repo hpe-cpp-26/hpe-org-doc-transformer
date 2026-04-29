@@ -1,12 +1,11 @@
 """Document classification using embeddings and centroid search."""
 
-from typing import Optional
-
 from embedding import generate_embedding
 from db.vector_queries import search_similar_centroid
 from types import NormalisedDocument, ClassificationResult
 
 from .actions import github_update_readme_and_index, route_to_agent, flag_for_human_review
+from .duplicate_check import check_duplicate_assignment
 
 
 class DocumentClassifier:
@@ -45,6 +44,10 @@ class DocumentClassifier:
             ConnectionError: If embedding generation fails
         """
         
+        duplicate_result = check_duplicate_assignment(normalized_doc)
+        if duplicate_result is not None:
+            return duplicate_result
+
         #generate 768-dimensional embedding
         embedding = generate_embedding(normalized_doc.content)
         
@@ -63,6 +66,7 @@ class DocumentClassifier:
                 document_id=normalized_doc.id,
                 action="CREATE_NEW_GROUP",
                 group_id=None,
+                path=normalized_doc.path,
                 similarity_score=None,
                 confidence=0.0,
                 reason="No similar groups found (below route threshold)",
@@ -79,6 +83,7 @@ class DocumentClassifier:
                 document_id=normalized_doc.id,
                 action="AUTO_ASSIGN",
                 group_id=top_group["id"],
+                path=normalized_doc.path,
                 similarity_score=similarity,
                 confidence=similarity,
                 reason=f"High similarity ({similarity:.2f}) to group '{top_group['name']}'",
@@ -91,6 +96,7 @@ class DocumentClassifier:
                 document_id=normalized_doc.id,
                 action="ROUTE_TO_AGENT",
                 group_id=top_group["id"],
+                path=normalized_doc.path,
                 similarity_score=similarity,
                 confidence=similarity,
                 reason=f"Ambiguous similarity ({similarity:.2f}) - routed to Agent",
@@ -102,6 +108,7 @@ class DocumentClassifier:
             document_id=normalized_doc.id,
             action="CREATE_NEW_GROUP",
             group_id=None,
+            path=normalized_doc.path,
             similarity_score=similarity,
             confidence=0.0,
             reason=f"Low similarity ({similarity:.2f}) - creating new group or flagging for review",

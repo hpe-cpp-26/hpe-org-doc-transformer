@@ -17,6 +17,7 @@ class ClassificationResult(BaseModel):
     document_id: str
     action: str  # "AUTO_ASSIGN", "REVIEW_BY_AGENT", "CREATE_NEW_GROUP"
     group_id: Optional[str] = None
+    path: Optional[str] = None
     similarity_score: Optional[float] = None
     confidence: float
     reason: str
