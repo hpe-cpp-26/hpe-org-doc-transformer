@@ -1,10 +1,12 @@
 """Document classification using embeddings and centroid search."""
 
+import logging
+
 from embedding import generate_embedding
 from db.vector_queries import search_similar_centroid
 from doc_types.documents import NormalisedDocument, ClassificationResult
 
-from actions import github_update_readme_and_index, route_to_agent, flag_for_human_review
+from actions import github_update_readme_and_index, route_to_agent, create_new_group
 from duplicate_check import check_duplicate_assignment
 
 
@@ -45,14 +47,18 @@ class DocumentClassifier:
             ConnectionError: If embedding generation fails
         """
         
+        logger = logging.getLogger(__name__)
+        logger.info("Classification started", extra={"doc_id": normalized_doc.id})
+
         duplicate_result = check_duplicate_assignment(normalized_doc)
         if duplicate_result is not None:
+            logger.info("Duplicate detected", extra={"doc_id": normalized_doc.id})
             return duplicate_result
 
-        #generate 768-dimensional embedding
+        logger.info("Generating embedding", extra={"doc_id": normalized_doc.id})
         embedding = generate_embedding(normalized_doc.content)
         
-        #search for similar group centroids
+        logger.info("Searching similar centroids", extra={"doc_id": normalized_doc.id})
         similar_groups = search_similar_centroid(
             embedding,
             limit=top_k,
@@ -61,8 +67,9 @@ class DocumentClassifier:
         
         #apply threshold routing logic
         if not similar_groups:
+            logger.info("No similar groups found", extra={"doc_id": normalized_doc.id})
             #no groups found at all → low confidence
-            flag_for_human_review(normalized_doc.id, "no similar groups found")
+            create_new_group(normalized_doc.id)
             return ClassificationResult(
                 document_id=normalized_doc.id,
                 action="CREATE_NEW_GROUP",
@@ -78,6 +85,10 @@ class DocumentClassifier:
         similarity = top_group["similarity"]
 
         if similarity >= DocumentClassifier.AUTO_ASSIGN_THRESHOLD:
+            logger.info(
+                "Auto-assigning to group",
+                extra={"doc_id": normalized_doc.id, "group_id": top_group["id"]},
+            )
             #auto-assign and trigger GitHub updates
             github_update_readme_and_index(normalized_doc.id, top_group["id"])
             return ClassificationResult(
@@ -91,6 +102,10 @@ class DocumentClassifier:
             )
 
         if similarity >= DocumentClassifier.AGENT_ROUTE_THRESHOLD:
+            logger.info(
+                "Routing to agent",
+                extra={"doc_id": normalized_doc.id, "group_id": top_group["id"]},
+            )
             #route to Agent for deeper classification
             route_to_agent(normalized_doc, similar_groups)
             return ClassificationResult(
@@ -103,8 +118,9 @@ class DocumentClassifier:
                 reason=f"Ambiguous similarity ({similarity:.2f}) - routed to Agent",
             )
 
-        #flag or create new group
-        flag_for_human_review(normalized_doc.id, f"low similarity {similarity:.2f}")
+        logger.info("Flagging for review", extra={"doc_id": normalized_doc.id})
+        #create new group
+        create_new_group(normalized_doc.id)
         return ClassificationResult(
             document_id=normalized_doc.id,
             action="CREATE_NEW_GROUP",
