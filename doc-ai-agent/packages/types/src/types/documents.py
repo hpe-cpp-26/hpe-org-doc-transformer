@@ -1,11 +1,6 @@
 from typing import Optional
 from pydantic import BaseModel
 
-<<<<<<< Updated upstream
-class NormalisedDocument(BaseModel):
-    pass
-=======
-
 class NormalisedDocument(BaseModel):
     """Represents a standardized document after normalization."""
     id: str
@@ -25,4 +20,3 @@ class ClassificationResult(BaseModel):
     similarity_score: Optional[float] = None
     confidence: float
     reason: str
->>>>>>> Stashed changes

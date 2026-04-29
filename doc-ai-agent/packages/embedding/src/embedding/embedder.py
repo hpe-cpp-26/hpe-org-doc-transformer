@@ -3,6 +3,7 @@
 import os
 from typing import Sequence
 
+from config.settings import get_settings
 import requests
 
 
@@ -20,9 +21,14 @@ def generate_embedding(text: str) -> Sequence[float]:
         ConnectionError: If Ollama is not reachable
         ValueError: If the embedding dimension is not 768
     """
-    ollama_host = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
-    model = os.environ.get("EMBEDDING_MODEL", "nomic-embed-text")
+    def get_env_url(name:str) -> str:
+        return get_settings().name
     
+    # ollama_host = os.environ.get("OLLAMA_HOST", "http://localhost:11434")
+    # model = os.environ.get("EMBEDDING_MODEL", "nomic-embed-text")
+
+    ollama_host = get_env_url("OLLAMA_HOST") or "http://localhost:11434"
+    model = get_env_url("EMBEDDING_MODEL") or "nomic-embed-text"
     try:
         response = requests.post(
             f"{ollama_host}/api/embed",

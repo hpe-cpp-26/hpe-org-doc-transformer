@@ -45,19 +45,19 @@ class DocumentClassifier:
             ConnectionError: If embedding generation fails
         """
         
-        # Step 1: Generate 768-dimensional embedding
+        #generate 768-dimensional embedding
         embedding = generate_embedding(normalized_doc.content)
         
-        # Step 2: Search for similar group centroids
+        #search for similar group centroids
         similar_groups = search_similar_centroid(
             embedding,
             limit=top_k,
             min_similarity=DocumentClassifier.AGENT_ROUTE_THRESHOLD,
         )
         
-        # Step 3: Apply threshold routing logic
+        #apply threshold routing logic
         if not similar_groups:
-            # No groups found at all → low confidence
+            #no groups found at all → low confidence
             flag_for_human_review(normalized_doc.id, "no similar groups found")
             return ClassificationResult(
                 document_id=normalized_doc.id,
@@ -68,12 +68,12 @@ class DocumentClassifier:
                 reason="No similar groups found (below route threshold)",
             )
 
-        # Get top result
+
         top_group = similar_groups[0]
         similarity = top_group["similarity"]
 
         if similarity >= DocumentClassifier.AUTO_ASSIGN_THRESHOLD:
-            # High confidence: auto-assign and trigger GitHub updates
+            #auto-assign and trigger GitHub updates
             github_update_readme_and_index(normalized_doc.id, top_group["id"])
             return ClassificationResult(
                 document_id=normalized_doc.id,
@@ -85,7 +85,7 @@ class DocumentClassifier:
             )
 
         if similarity >= DocumentClassifier.AGENT_ROUTE_THRESHOLD:
-            # Ambiguous: route to Agent for deeper inspection
+            #route to Agent for deeper classification
             route_to_agent(normalized_doc, similar_groups)
             return ClassificationResult(
                 document_id=normalized_doc.id,
@@ -96,7 +96,7 @@ class DocumentClassifier:
                 reason=f"Ambiguous similarity ({similarity:.2f}) - routed to Agent",
             )
 
-        # Low confidence: flag or create new group
+        #flag or create new group
         flag_for_human_review(normalized_doc.id, f"low similarity {similarity:.2f}")
         return ClassificationResult(
             document_id=normalized_doc.id,
