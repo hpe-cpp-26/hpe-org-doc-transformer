@@ -10,7 +10,10 @@
 - [Week 3 — PoC: AI Document Agent](#week-3--poc-ai-document-agent)
 - [Week 4 — Team PoC: Travel Planner Agent (Planning)](#week-4--team-poc-travel-planner-agent-planning)
 - [Week 5 — Team PoC: Travel Planner Agent (Build) + Project Kickoff](#week-5--team-poc-travel-planner-agent-build--main-project-kickoff)
-- [Week 6 — Project: Architecture & Design](#week-6--main-project-architecture--design)
+- [Week 6 — Project: Architecture & Design](#week-6--transforming-organisational-docs-using-doc-ai-agent)
+- [Week 7 — Project: Implementation and Review ](#week-7--transforming-organisational-docs-using-doc-ai-agent)
+- [Week 8 — Project: Implementation and Review](#week-8--transforming-organisational-docs-using-doc-ai-agent)
+- [Week 9 — Project: Implementation and Review](#week-9--transforming-organisational-docs-using-doc-ai-agent)
 
 ---
 
@@ -231,5 +234,34 @@ It focuses on the first phase of the pipeline where webhook events are captured,
 The objective was to validate real-time document sync, event flow, and service communication.  
 This serves as the foundation for the complete AI-powered knowledge integration system.
 
+
+## Week 7 — Transforming Organisational Docs Using Doc AI Agent
+
+**`4/8/2026 – 4/22/2026`**
+The meeting focused on planning and beginning implementation of the first project phase, specifically knowledge ingestion. The team discussed webhooks, connectors, message queues, normalization, and finalized the tech stack. The mentor advised starting implementation and presenting progress in the next meeting.
+
+## Week 8 — Transforming Organisational Docs Using Doc AI Agent
+
+**`4/22/2026 – 4/29/2026`**
+
+In Week 8, we presented the architecture for the classification component of the project to our mentor. The proposed approach begins by receiving normalized data and checking whether the document ID already exists. If it does, the system retrieves the corresponding group path and updates the existing document in the central GitHub repository.
+
+For new documents, a vector search is performed against group centroids to identify relevant groups. Based on the confidence score:
+
+High confidence leads to assigning the document to an existing group.
+Low confidence results in creating a new group for the document.
+Medium confidence (ambiguous cases) is handled using an agent with MCP for further resolution.
+
+If the ambiguity persists even after LLM-based processing, the system falls back to human review.
+<img width="1023" height="871" alt="Screenshot 2026-04-30 at 10 47 57 AM" src="https://github.com/user-attachments/assets/9b3d54d4-e63c-430f-909d-3d0e5d30bec2" />
+
+## Week 9 — Transforming Organisational Docs Using Doc AI Agent
+
+**`4/29/2026 – 5/6/2026`**
+
+This week focused on a checkpoint demo to showcase the progress made so far. Each team presented their respective contributions.
+Team 1 demonstrated the knowledge ingestion pipeline, covering the flow from webhooks to connectors, message queue handling, knowledge extraction via REST API, and the normalization process.
+Team 2 presented progress on the classification component, including project setup, logging configuration, database setup using PostgreSQL with pgvector, embedding model integration, and implementation of duplication checks along with vector search using confidence scores.
+The mentor reviewed and recorded the demos. Feedback for the next week included improving the normalization logic and presenting progress on MCP and agent development.
 
 _Last updated: April 2026_
