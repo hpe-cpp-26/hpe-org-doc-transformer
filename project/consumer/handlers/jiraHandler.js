@@ -1,27 +1,61 @@
-const { hasChanged } = require("../hashStore");
+const axios = require("axios");
+const {hasChaned} = require("../hashStore");
 
-module.exports = async function (data, channel) {
-  const { payload } = data;
+module.exports = async function (data , channel) {
+  const {payload} = data;
 
-  const issueKey = payload.issue?.key;
-  if (!issueKey) return console.log("Invalid Jira payload");
+  const issue = payload.issue;
+  const issueKey = issue?.key;
 
-  const fullData = {
-    issueKey,
-    summary: payload.issue?.fields?.summary,
-    status: payload.issue?.fields?.status?.name
-  };
-
-  if (!hasChanged(issueKey, fullData)) {
-    console.log("Jira no change");
+  if(!issue || !issueKey)
+  {
+    console.log("Invalid Jira payload");
     return;
   }
+   
+    try{
+      console.log("Calling Jira enrichment API");
 
-  channel.sendToQueue(
-    "normalization_queue",
-    Buffer.from(JSON.stringify({ ...data, fullData })),
-    { persistent: true }
-  );
+      const response = await axios.post(
+        "http://localhost:5000/enrich/jira",
+        {issueKey}
+      );
 
-  console.log("Jira sent");
+      const issueDetails = response.data.issueDetails;
+      const fullData =  {
+           issueKey,
+           summary : issueDetails.fields.summary,
+           description : issueDetails.fields.description,
+           status : issueDetails.fields.status?.name,
+           assignee : issueDetails.fields.assignee?.displayName,
+           reporter : issueDetails.fields.reporter?.displayName,
+           priority : issueDetails.fields.priority?.name,
+           issueType : issueDetails.fields.issueType?.name,
+           project : issueDetails.fields.project?.key,
+      };
+
+      console.log("Jira Full Data:", fullData);
+
+      if(!hasChaned(issueKey , fullData)){
+        console.log("jira no change");
+        return;
+      }
+
+        channel.sendToQueue(
+          "normalization_queue",
+          Buffer.from(
+            JSON.stringify({
+              source:"jira",
+              payload,
+              fullData
+            })
+          ),
+          {persistent : true}
+        );
+
+        console.log("jira send to Normalization_Queue");
+    }
+    catch(err){
+      console.error("jira error:", err.message);
+    }
 };
