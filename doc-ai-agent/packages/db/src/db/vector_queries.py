@@ -6,7 +6,7 @@ from typing import Any
 import psycopg
 
 from .connection import DatabaseConnectionError, get_connection
-
+from doc_types.documents import DocumentAssignment
 
 Vector = Sequence[float | int]
 
@@ -98,8 +98,8 @@ def insert_document(
     )
 
 
-def get_document_assignment(document_id: str) -> tuple[str | None, str | None]:
-    query = "SELECT group_id, path FROM documents WHERE id = %s"
+def get_document_assignment(document_id: str) ->DocumentAssignment:
+    query = "SELECT group_id, embedding, path FROM documents WHERE id = %s"
 
     try:
         with get_connection() as connection:
@@ -110,10 +110,13 @@ def get_document_assignment(document_id: str) -> tuple[str | None, str | None]:
         raise DatabaseConnectionError("Document lookup failed") from exc
 
     if not row:
-        return None, None
+        return DocumentAssignment(group_id=None, embedding=None, path=None)
 
-    return row.get("group_id"), row.get("path")
-
+    return DocumentAssignment(
+        group_id=row.get("group_id"),
+        embedding=row.get("embedding"),
+        path=row.get("path")
+    )
 
 def update_document(
     document_id: str,
