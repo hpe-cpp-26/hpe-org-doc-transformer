@@ -413,11 +413,15 @@ name = "embedding"
 version = "0.1.0"
 source = { editable = "packages/embedding" }
 dependencies = [
+    { name = "config" },
     { name = "requests" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "requests", specifier = ">=2.31.0,<3" }]
+requires-dist = [
+    { name = "config", editable = "packages/config" },
+    { name = "requests", specifier = ">=2.31.0,<3" },
+]
 
 [[package]]
 name = "exceptiongroup"
