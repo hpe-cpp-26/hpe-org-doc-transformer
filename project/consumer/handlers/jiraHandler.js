@@ -1,5 +1,5 @@
 const axios = require("axios");
-const {hasChaned} = require("../hashStore");
+const { hasChanged } = require("../hashStore");
 
 module.exports = async function (data , channel) {
   const {payload} = data;
@@ -22,21 +22,29 @@ module.exports = async function (data , channel) {
       );
 
       const issueDetails = response.data.issueDetails;
-      const fullData =  {
-           issueKey,
-           summary : issueDetails.fields.summary,
-           description : issueDetails.fields.description,
-           status : issueDetails.fields.status?.name,
-           assignee : issueDetails.fields.assignee?.displayName,
-           reporter : issueDetails.fields.reporter?.displayName,
-           priority : issueDetails.fields.priority?.name,
-           issueType : issueDetails.fields.issueType?.name,
-           project : issueDetails.fields.project?.key,
+      const fullData = {
+        issueKey,
+        summary: issueDetails.fields.summary,
+        description: issueDetails.fields.description,
+        status: issueDetails.fields.status?.name,
+        assignee: issueDetails.fields.assignee?.displayName,
+        reporter: issueDetails.fields.reporter?.displayName,
+        priority: issueDetails.fields.priority?.name,
+        issueType: issueDetails.fields.issuetype?.name,
+        project: issueDetails.fields.project?.key,
+        labels: issueDetails.fields.labels || [],
+        dueDate: issueDetails.fields.duedate || null,
+        updatedBy: {
+          accountId: payload.user?.accountId || null,
+          displayName: payload.user?.displayName || null,
+          email: payload.user?.emailAddress || null,
+        },
+        changelog: payload.changelog?.items || [],  
       };
 
       console.log("Jira Full Data:", fullData);
 
-      if(!hasChaned(issueKey , fullData)){
+      if(!hasChanged(issueKey , fullData)){
         console.log("jira no change");
         return;
       }
