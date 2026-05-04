@@ -24,7 +24,7 @@ class ClassifierState(TypedDict):
     top_similarity_score: Optional[float]
 
     """classification result"""
-    classification_result: Optional[Literal["AUTO_ASSIGN", "REVIEW_BY_AGENT", "CREATE_NEW_GROUP"]]
+    classification_route: Optional[Literal["AUTO_ASSIGN", "REVIEW_BY_AGENT", "CREATE_NEW_GROUP"]]
 
     """Agent context and decision making"""
     agent_context: Optional[dict]
