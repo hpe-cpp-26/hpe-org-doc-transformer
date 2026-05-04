@@ -1,16 +1,14 @@
 from typing import Optional
 from pydantic import BaseModel
 
+
 class NormalisedDocument(BaseModel):
     """Represents a standardized document after normalization."""
-    id: str
-    source: str  # "github" or "jira"
-    title: str
+    doc_id: str
+    source: str
+    title: Optional[str]
     content: str
-    path: Optional[str] = None
-    group_id: Optional[str] = None
-    metadata: dict = {}
-
+    metadata: dict
 
 class ClassificationResult(BaseModel):
     """Result from document classification."""
@@ -21,3 +19,10 @@ class ClassificationResult(BaseModel):
     similarity_score: Optional[float] = None
     confidence: float
     reason: str
+
+class DocumentAssignment(BaseModel):
+    """Represents the assignment of a document to a group."""
+    group_id: Optional[str] = None
+    embedding: Optional[list[float]] = None
+    path: Optional[str] = None
+    

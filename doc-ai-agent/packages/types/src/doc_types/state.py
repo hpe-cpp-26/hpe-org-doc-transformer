@@ -8,13 +8,16 @@ class ClassifierState(TypedDict):
     content: str
     metadata: dict
     
+    """validation check"""
+    is_valid: Optional[bool]
+
     """Duplication Check"""
     is_duplicate:bool
     existing_group_id: Optional[str]
     existing_doc_id: Optional[str]
 
     """Embedding"""
-    embeddings: Optional[list[float]]
+    embedding: Optional[list[float]]
 
     """Group centroid search"""
     similar_group_candidates: Optional[list[dict]]
