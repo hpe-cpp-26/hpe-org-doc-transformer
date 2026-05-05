@@ -39,6 +39,13 @@ class Settings(BaseSettings):
     agent_model: str ="gemini-2.5-flash"
     finger_print_model: str = "gemini-2.5-flash"
 
+    # GitHub settings
+    github_api_url: str
+    github_org: str
+    github_repo: str
+    github_base_path: str
+    github_token: str
+
 
 @lru_cache
 def get_settings(service_name: str | None = None) -> Settings:

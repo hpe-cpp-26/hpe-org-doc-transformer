@@ -905,12 +905,16 @@ source = { virtual = "services/mcp-server" }
 dependencies = [
     { name = "config" },
     { name = "fastmcp" },
+    { name = "httpx" },
+    { name = "pydantic" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "config", editable = "packages/config" },
     { name = "fastmcp", specifier = ">=3.2.4" },
+    { name = "httpx", specifier = ">=0.28.1" },
+    { name = "pydantic", specifier = ">=2.13.3" },
 ]
 
 [[package]]
