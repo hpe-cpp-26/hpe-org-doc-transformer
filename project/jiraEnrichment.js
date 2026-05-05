@@ -9,8 +9,7 @@ const Jira_Base_URL = process.env.JIRA_BASE_URL;
 const Jira_Email = process.env.JIRA_EMAIL;
 const Jira_API_Token = process.env.JIRA_API_TOKEN;
 
-console.log("GITHUB TOKEN:", process.env.GITHUB_TOKEN);
-console.log("JIRA TOKEN:", process.env.JIRA_API_TOKEN);
+
 
 app.post("/enrich/jira" , async(req , res) =>{
     const {issueKey} = req.body;
@@ -35,9 +34,11 @@ app.post("/enrich/jira" , async(req , res) =>{
         });
     }
     catch(err){
-        console.error("Jira enrichment failed:" , err.response?.data || err.message);
-        res.status(500).json({error : "Jira enrichment failed"});
-    }
+        console.error("FULL ERROR:");
+        console.log(err.response?.status);
+        console.log(err.response?.data);
+        console.log(err.message);
+      }
 });
 
 app.listen(5000 , () =>{
