@@ -12,11 +12,13 @@ def register_fetch_group_readme_tool(mcp: FastMCP):
     @mcp.tool
     async def fetch_group_readme(request: FetchGroupReadmeRequest) -> FetchGroupReadmeResponse:
         """
-        Fetches the README content for a given GitHub group name.
-        Args:
-            request (FetchGroupReadmeRequest): The request object containing the GitHub group name.
+        Fetch README content for a group name under the configured org/repo.
+        Input:
+            request.group_name: subpath under the base path (for example "self-healing-system").
+        Resolves to:
+            {GITHUB_ORG}/{GITHUB_REPO}/contents/{GITHUB_BASE_PATH}/{group_name}/README.md
         Returns:
-            FetchGroupReadmeResponse: The response object containing the README content.
+            README content as plain text in FetchGroupReadmeResponse.
         """
         group_name = request.group_name
         logger.info("Fetching README for group: %s", group_name)
