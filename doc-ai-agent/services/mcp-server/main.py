@@ -1,15 +1,17 @@
+from fastmcp import FastMCP
 import logging
 
 from config import configure_logging, get_settings
+from tools.github.fetch_group_readme import register_fetch_group_readme_tool
 
+settings = get_settings()
+configure_logging(settings)
 
-def main() -> None:
-    settings = get_settings(service_name="mcp-server")
-    configure_logging(settings)
+logger = logging.getLogger(__name__)
 
-    logger = logging.getLogger(__name__)
-    logger.info("MCP Server Service starting")
-
+mcp = FastMCP("doc-ai-mcp-server")
+register_fetch_group_readme_tool(mcp)
 
 if __name__ == "__main__":
-    main()
+    logger.info("MCP Server Service starting")
+    mcp.run()

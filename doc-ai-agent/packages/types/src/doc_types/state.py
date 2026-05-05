@@ -8,13 +8,15 @@ class ClassifierState(TypedDict):
     content: str
     metadata: dict
     
+    """Optional fingerprint field that holds data that can be used for efficient matching."""
+    fingerprint: Optional[str]
+    
     """validation check"""
-    is_valid: Optional[bool]
+    is_valid: Optional[bool] 
 
     """Duplication Check"""
     is_duplicate:bool
     existing_group_id: Optional[str]
-    existing_doc_id: Optional[str]
 
     """Embedding"""
     embedding: Optional[list[float]]
@@ -24,7 +26,7 @@ class ClassifierState(TypedDict):
     top_similarity_score: Optional[float]
 
     """classification result"""
-    classification_result: Optional[Literal["AUTO_ASSIGN", "REVIEW_BY_AGENT", "CREATE_NEW_GROUP"]]
+    classification_route: Optional[Literal["AUTO_ASSIGN", "REVIEW_BY_AGENT", "CREATE_NEW_GROUP"]]
 
     """Agent context and decision making"""
     agent_context: Optional[dict]

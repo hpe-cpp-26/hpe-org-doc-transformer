@@ -9,19 +9,7 @@ logger = logging.getLogger(__name__)
 settings = get_settings()
 
 def generate_embedding(text: str) -> Sequence[float]:
-    """
-    Generate a 768-dimensional embedding for the given text using Ollama.
-    
-    Args:
-        text: The text to embed
-        
-    Returns:
-        A list of 768 floats representing the embedding
-        
-    Raises:
-        ConnectionError: If Ollama is not reachable
-        ValueError: If the embedding dimension is not 768
-    """
+    """Generates a 768-dimensional embedding for the given text."""
 
     try:
         response = requests.post(
@@ -45,7 +33,7 @@ def generate_embedding(text: str) -> Sequence[float]:
     embeddings = data.get("embeddings", [])
     
     if not embeddings:
-        
+        logger.error(f"No embeddings returned from Ollama")
         raise ValueError("No embeddings returned from Ollama")
     
     embedding = embeddings[0]

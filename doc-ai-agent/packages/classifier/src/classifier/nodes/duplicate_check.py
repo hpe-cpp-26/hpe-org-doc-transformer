@@ -23,6 +23,8 @@ def duplicate_check(state: ClassifierState) -> ClassifierState:
             state["existing_group_id"] = res.group_id
             state["existing_path"] = res.path
             state["embedding"] = res.embedding
+            state["classification_route"] = "AUTO_ASSIGN"
+            state["create_new_group"] = False
         else:
             state["is_duplicate"] = False
 
@@ -33,7 +35,9 @@ def duplicate_check(state: ClassifierState) -> ClassifierState:
             exc_info=exc,
         )
         state["is_duplicate"] = False
-        state["error"].append("Database connection error during duplicate check")
+        state.setdefault("errors", []).append(
+            "Database connection error during duplicate check"
+        )
 
     state["decision_path"].append("check_duplicate")
     return state
