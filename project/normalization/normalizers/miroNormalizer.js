@@ -8,14 +8,35 @@ module.exports = function normalizeMiro({ payload, fullData }) {
     id: String(fullData.boardId),
     source: "miro",
     type: eventType,
-    title: payload.boardId?.name || `Board ${fullData.boardId}`,
-    url: boardUrl,
-    status: "N/A",
+    resource: {
+      id: String(fullData.boardId),
+      name: payload.boardId?.name || `Board ${fullData.boardId}`,
+      url: boardUrl,
+      status: "N/A",
+    },
+    actor: {
+      id: payload.createdBy?.id || null,
+      name: payload.createdBy?.name || null,
+      email: payload.createdBy?.email || null,
+    },
+    changes: {
+      files: [],
+      commits: [],
+      fieldChanges: [],
+      pageChanges: null,
+      boardChanges: payload.item
+        ? [
+            {
+              itemId: payload.item?.id || null,
+              itemType: payload.item?.type || null,
+              action: eventType.split(":")[1] || "updated",
+            },
+          ]
+        : [],
+    },
     meta: {
       teamId: payload.teamId || null,
-      itemId: payload.item?.id || null,
-      itemType: payload.item?.type || null,
-      createdBy: payload.createdBy?.id || null,
+      boardType: payload.boardId?.type || null,
     },
   });
 };

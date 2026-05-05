@@ -11,15 +11,6 @@ public class t{
         System.out.println("Latest trigger check");
         System.out.println("Latest trigge github check");
         System.out.println("Latest trigge github check after enriching using Rest APIS check ");
-        System.out.println("Readme check");
-        System.out.println("Commit id check");
-        System.out.println("Commit id info retrieval check");
-        System.out.println("Commit id info retrieval check after changing visiblity");
-        System.out.println("Commit id info retrieval check after changing visiblity");
-        System.out.println("Commit id info retrieval check after changing visiblity");
-        System.out.println("Commit id info retrieval check after changing visiblity check");
-        System.out.println("Full commit file changes");
-
     }
     public static int binSearch(int nums[], int targetElement)
     {

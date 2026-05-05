@@ -1,4 +1,6 @@
 const axios = require("axios");
+require("dotenv").config({ path: require("path").resolve(__dirname, "../../.env") });
+
 const {hasChanged} = require("../hashStore");
 const {extractReadmeData} = require("../utils/readmeParser");
 

@@ -1,7 +1,11 @@
 {
   "dependencies": {
     "amqplib": "^1.0.3",
+<<<<<<< HEAD
     "axios": "^1.15.2",
+=======
+    "axios": "^1.16.0",
+>>>>>>> origin/manasvi
     "dotenv": "^17.4.2",
     "express": "^5.2.1"
   }

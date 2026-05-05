@@ -12,13 +12,32 @@ module.exports = function normalizeConfluence({ payload, fullData }) {
     id: String(fullData.pageId),
     source: "confluence",
     type: eventType,
-    title: fullData.title || payload.page?.title || String(fullData.pageId),
-    url: pageUrl,
-    status: "N/A",
+    resource: {
+      id: String(fullData.pageId),
+      name: fullData.title || payload.page?.title || String(fullData.pageId),
+      url: pageUrl,
+      status: "N/A",
+    },
+    actor: {
+      id: payload.page?.version?.by?.accountId || null,
+      name: payload.page?.version?.by?.displayName || null,
+      email: payload.page?.version?.by?.email || null,
+    },
+    changes: {
+      files: [],
+      commits: [],
+      fieldChanges: [],
+      pageChanges: {
+        versionBefore: (fullData.version || 1) - 1,
+        versionAfter: fullData.version || 1,
+        spaceKey: payload.page?.space?.key || null,
+        diffUrl: pageUrl ? `${pageUrl}?diff` : null,
+      },
+      boardChanges: [],
+    },
     meta: {
-      version: fullData.version,
       spaceKey: payload.page?.space?.key || null,
-      authorDisplayName: payload.page?.version?.by?.displayName || null,
+      parentPageId: payload.page?.ancestors?.[0]?.id || null,
       lastModified: payload.page?.version?.when || null,
     },
   });
