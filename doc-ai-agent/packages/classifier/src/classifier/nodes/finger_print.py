@@ -1,6 +1,6 @@
 from doc_types.state import ClassifierState
 from agent.llm import get_llm
-from agent.prompts import FINGERPRINT_PROMPT
+from agent.prompts.fingerprint_prompt import FINGERPRINT_PROMPT
 import json
 import re
 import logging
