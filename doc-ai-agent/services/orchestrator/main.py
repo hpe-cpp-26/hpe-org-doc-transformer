@@ -8,7 +8,7 @@ from doc_types.documents import NormalisedDocument
 from formatting import SEPARATOR, print_doc_header, print_result
 
 
-async def _run_doc(doc: NormalisedDocument, logger: logging.Logger) -> dict:
+async def _run_doc(doc: NormalisedDocument) -> dict:
     print_doc_header(doc)
     final_state = await run_workflow(doc)
     print_result(final_state)
@@ -30,7 +30,7 @@ async def main():
     print("    ORCHESTRATOR — CLASSIFIER PIPELINE TEST")
     print(SEPARATOR)
 
-    final_state=await _run_doc(TEST_DOCS[1], logger)
+    final_state=await _run_doc(TEST_DOCS[1])
 
     print(f"{SEPARATOR}")
     print("   ALL DOCS PROCESSED")
