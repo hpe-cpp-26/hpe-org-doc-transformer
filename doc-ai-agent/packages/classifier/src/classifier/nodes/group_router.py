@@ -1,5 +1,7 @@
 
 
+import json
+
 from doc_types.state import ClassifierState
 from embedding.embedder import generate_embedding
 from db.vector_queries import search_similar_centroid
@@ -8,7 +10,11 @@ from config.settings import get_settings
 settings = get_settings()
 
 def decide_route(state: ClassifierState) -> ClassifierState:
-    content = state.get("content", "")
+    content = state.get("fingerprint", "")
+    if isinstance(content, dict):
+        content = content.get("fingerprint", "") or json.dumps(content)
+    if content is None:
+        content = ""
     embedding = generate_embedding(content)
     state["embedding"] = embedding
 
@@ -31,8 +37,8 @@ def decide_route(state: ClassifierState) -> ClassifierState:
         state["existing_group_id"] = groups[0]["group_id"]
     else:
         state["create_new_group"] = False
+        state["similar_group_candidates"] = groups
         state["classification_route"] = "REVIEW_BY_AGENT"
-
 
     state["decision_path"].append("decide_route")
     return state

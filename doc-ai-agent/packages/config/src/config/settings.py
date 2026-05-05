@@ -34,6 +34,11 @@ class Settings(BaseSettings):
     review_threshold: float = 0.4
     top_k: int = 4
 
+    #LLM settings
+    google_api_key: str 
+    agent_model: str ="gemini-2.5-flash"
+    finger_print_model: str = "gemini-2.5-flash"
+
 
 @lru_cache
 def get_settings(service_name: str | None = None) -> Settings:
