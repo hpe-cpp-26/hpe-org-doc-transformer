@@ -2,7 +2,8 @@
 from typing import Optional
 
 from doc_types.state import ClassifierState
-
+import logging
+logger= logging.getLogger(__name__)
 
 REQUIRED_FIELDS = ["doc_id", "source", "content", "metadata"]
 
@@ -20,7 +21,7 @@ def validate_input(state:ClassifierState) -> ClassifierState:
     return state
 
 def check_required_fields(state:ClassifierState) -> Optional[str]:
-    missing = [f for f in REQUIRED_FIELDS if f not in state.get(f)]
+    missing = [f for f in REQUIRED_FIELDS if not state.get(f)]
     if missing:
         return f"Missing required fields: {', '.join(missing)}"
     return None
@@ -29,3 +30,4 @@ def check_empty_content(state:ClassifierState) -> Optional[str]:
     if not state.get("content", "").strip():
         return "Content field is empty"
     return None
+

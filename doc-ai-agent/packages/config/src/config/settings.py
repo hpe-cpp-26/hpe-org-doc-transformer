@@ -26,7 +26,25 @@ class Settings(BaseSettings):
     log_format: str = "json" 
     database_url: str = "postgresql://postgres:postgres@localhost:5432/doc_ai"
     ollama_host: str = "http://localhost:11434"
-    embedding_model: str = "nomic-embed-text"   
+    embedding_model: str = "nomic-embed-text"
+    
+
+    # Routing thresholds and parameters
+    auto_assign_threshold: float = 0.7
+    review_threshold: float = 0.4
+    top_k: int = 4
+
+    #LLM settings
+    google_api_key: str 
+    agent_model: str ="gemini-2.5-flash"
+    finger_print_model: str = "gemini-2.5-flash"
+
+    # GitHub settings
+    github_api_url: str
+    github_org: str
+    github_repo: str
+    github_base_path: str
+    github_token: str
 
 
 @lru_cache
