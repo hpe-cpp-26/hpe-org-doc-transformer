@@ -34,7 +34,7 @@ def decide_route(state: ClassifierState) -> ClassifierState:
     elif groups[0]["similarity"] >= settings.auto_assign_threshold:
         state["create_new_group"] = False
         state["classification_route"] = "AUTO_ASSIGN"
-        state["existing_group_id"] = groups[0]["group_id"]
+        state["existing_group_id"] = groups[0]["id"]
     else:
         state["create_new_group"] = False
         state["similar_group_candidates"] = groups

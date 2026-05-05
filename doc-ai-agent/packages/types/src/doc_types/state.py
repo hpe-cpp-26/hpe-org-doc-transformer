@@ -35,7 +35,7 @@ class ClassifierState(TypedDict):
     agent_decision: Optional[dict]
 
     """Final Decision"""
-    assinged_group_id: Optional[str]
+    assigned_group_id: Optional[str]
     create_new_group: Optional[bool]
     github_write_status: Optional[str]
     db_update_status: Optional[str]
@@ -43,7 +43,7 @@ class ClassifierState(TypedDict):
 
 
     """Audit and error handling"""
-    decision_path: Optional[str]
+    decision_path: Optional[list[str]]
     errors: Optional[list[str]]
 
 

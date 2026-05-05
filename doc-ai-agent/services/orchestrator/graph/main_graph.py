@@ -39,7 +39,7 @@ def build_graph():
         lambda s: END if s["is_duplicate"] else "generate_fingerprint"
     )
     classifier.add_edge("generate_fingerprint", "decide_route")
-    classifier.add_edge("decide_route", next_route)
+    classifier.add_conditional_edges("decide_route", next_route)
     classifier.add_edge("agent_review", END)
     
     return classifier.compile()

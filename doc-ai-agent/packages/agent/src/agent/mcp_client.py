@@ -1,6 +1,6 @@
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parents[3]
+BASE_DIR = Path(__file__).resolve().parents[4]
 
 MCP_PROJECT_PATH = BASE_DIR / "services" / "mcp-server" / "main.py"
 
@@ -12,7 +12,10 @@ def get_mcp_config() -> dict:
             "command": "uv",
             "args": [
                 "run",
-                "python3",
+                "fastmcp",
+                "run",
+                "--transport",
+                "stdio",
                 str(MCP_PROJECT_PATH),
             ]
         }
