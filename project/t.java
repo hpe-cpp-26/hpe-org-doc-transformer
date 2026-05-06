@@ -45,4 +45,12 @@ public class t{
         }
         return false;
     }
+
+    public static void printArray(int arr[])
+    {
+        for(int val : arr)
+        {
+            System.out.println(val);
+        }
+    }
 }
