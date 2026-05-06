@@ -7,7 +7,7 @@ module.exports = function normalizeGithub({ payload, fullData }) {
     (payload.ref ? "ref_update" : null) ||
     "repository_event";
 
-  // files from enriched commit details
+  
   const files = (fullData.commits || []).flatMap(c =>
     (c.files || []).map(f => ({
       filename: f.filename,
@@ -15,11 +15,11 @@ module.exports = function normalizeGithub({ payload, fullData }) {
       additions: f.additions ?? null,
       deletions: f.deletions ?? null,
       changes: f.changes ?? null,
-      patch: f.patch || null,
+      patch : f.patch ? f.patch.slice(0 , 1000) : null,
     }))
   );
 
-  // commits from enriched commit details
+  
   const commits = (fullData.commits || []).map(c => ({
     sha: c.commitId,
     message: c.message,

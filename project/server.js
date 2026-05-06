@@ -8,7 +8,8 @@ const jiraConnector = require("./Connectors/jiraConnector");
 const confluenceConnector = require("./Connectors/confluenceConnector");
 const miroConnector = require("./Connectors/miroConnector");
 
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 app.post("/webhook/github", githubConnector);
 app.post("/webhook/jira", jiraConnector);
