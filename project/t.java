@@ -13,6 +13,7 @@ public class t{
         System.out.println("Latest trigge github check after enriching using Rest APIS check ");
         System.out.println("Final enriched and norm check ");
         System.out.println("Final enriched data and norm check ");
+        System.out.println("Demo check for github normalization");
     }
     public static int binSearch(int nums[], int targetElement)
     {
