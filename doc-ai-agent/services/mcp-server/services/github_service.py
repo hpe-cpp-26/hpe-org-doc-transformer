@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 settings = get_settings(service_name="mcp-server")
 
 
-class GitHubReadmeService:
+class GitHubService:
     def __init__(self) -> None:
 
         limits = httpx.Limits(max_connections=20, max_keepalive_connections=10)

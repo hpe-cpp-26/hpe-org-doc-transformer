@@ -11,7 +11,7 @@ Decide whether the new document belongs to one of the candidate groups
 or needs a new group created.
 
 STRICT PROCESS — follow in order:
-1. For EACH candidate group, call `fetch_group_readme` with its group_id
+1. For EACH candidate group, call `fetch_group_readme` with its group_name
 2. Read each README carefully — understand what project/domain that group covers  
 3. Compare the new document's fingerprint and content against each group
 4. Make your final decision

@@ -2,7 +2,7 @@ from fastmcp import FastMCP
 import logging 
 from agent.schema import FetchGroupReadmeRequest, FetchGroupReadmeResponse
 
-from services.github_service import GitHubReadmeService
+from services.github_service import GitHubService
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +23,8 @@ def register_fetch_group_readme_tool(mcp: FastMCP):
         group_name = request.group_name
         logger.info("Fetching README for group: %s", group_name)
 
-        service = GitHubReadmeService()
-        readme_content = await service.get_group_readme_content(group_name)
+        github_service = GitHubService()
+        readme_content = await github_service.get_group_readme_content(group_name)
         logger.info("Fetched README for group: %s", group_name)
         
         return FetchGroupReadmeResponse(

@@ -215,3 +215,28 @@ def insert_chunks(
                     )
     except psycopg.Error as exc:  
         raise DatabaseConnectionError("Chunk insertion failed") from exc
+        
+
+
+def search_similar_chunks_by_group(group_id: str, embedding: Vector, limit: int=5) -> list[dict[str, Any]]:
+    query = """
+        SELECT
+            doc_id,
+            chunk_text,
+            1 - (embedding <=> %s::vector) AS similarity
+        FROM document_chunks
+        WHERE group_id = %s
+        ORDER BY embedding <=> %s::vector
+        LIMIT %s
+    """
+    params: list[Any] = [_vector_literal(embedding), group_id, _vector_literal(embedding), limit]
+
+    try:
+        with get_connection() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(query, params)
+                rows = cursor.fetchall()
+    except psycopg.Error as exc:
+        raise DatabaseConnectionError("Chunk similarity search failed") from exc
+
+    return [dict(row) for row in rows]
