@@ -19,7 +19,7 @@ STRICT PROCESS — follow in order:
 DECISION RULES:
 - ASSIGN if the document clearly belongs to a candidate group
 - CREATE_NEW only if the document is genuinely distinct from ALL candidates
-- A similarity score >= 0.7 is a strong signal toward ASSIGN
+- A similarity score >= 0.8 is a strong signal toward ASSIGN
 - Different tool sources (Jira vs GitHub) covering the same project = same group
 
 FINAL RESPONSE — output this JSON and nothing else:

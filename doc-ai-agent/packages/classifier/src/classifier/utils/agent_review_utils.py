@@ -32,30 +32,30 @@ def _build_user_message(state: dict) -> str:
         )
 
     return f"""
-New document to classify:
+        New document to classify:
 
-Title      : {state.get('title', 'N/A')}
-Source     : {state.get('source', 'N/A')}
-Fingerprint: {state.get('fingerprint', 'N/A')}
-Metadata   : {json.dumps(state.get('metadata', {}), indent=2)}
+        Title      : {state.get('title', 'N/A')}
+        Source     : {state.get('source', 'N/A')}
+        Fingerprint: {state.get('fingerprint', 'N/A')}
+        Metadata   : {json.dumps(state.get('metadata', {}), indent=2)}
 
-Candidate groups:
-{candidates_text}
+        Candidate groups:
+        {candidates_text}
 
-Top similarity score: {state.get('top_similarity_score', 0.0):.3f}
+        Top similarity score: {state.get('top_similarity_score', 0.0):.3f}
 
-Instructions:
-{instruction}
+        Instructions:
+        {instruction}
 
-Return ONLY valid JSON in this format:
+        Return ONLY valid JSON in this format:
 
-{{
-    "decision": "ASSIGN" | "CREATE_NEW",
-    "assigned_group_id": string | null,
-    "confidence": float (0 to 1),
-    "reasoning": string
-}}
-""".strip()
+        {{
+            "decision": "ASSIGN" | "CREATE_NEW",
+            "assigned_group_id": string | null,
+            "confidence": float (0 to 1),
+            "reasoning": string
+        }}
+        """.strip()
 
 
 def _normalize_message_content(content: Any) -> str:
