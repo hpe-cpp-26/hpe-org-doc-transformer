@@ -22,7 +22,6 @@ def next_route(state: ClassifierState)-> str:
 def build_graph():
     classifier = StateGraph(ClassifierState)
     
-    #register nodes
     classifier.add_node("validate_input" , validate_input)
     classifier.add_node("check_duplicate", duplicate_check)
     classifier.add_node("generate_fingerprint", generate_fingerprint)

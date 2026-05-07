@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 mcp = FastMCP("doc-ai-mcp-server")
 register_fetch_group_readme_tool(mcp)
-# register_search_group_chunks_tool(mcp)
+register_search_group_chunks_tool(mcp)
 
 if __name__ == "__main__":
     logger.info("MCP Server Service starting")
