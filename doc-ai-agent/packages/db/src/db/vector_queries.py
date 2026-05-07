@@ -41,7 +41,6 @@ def search_similar_centroid(
         SELECT
             id,
             name,
-            centroid,
             doc_count,
             1 - (centroid <=> %s::vector) AS similarity
         FROM groups
