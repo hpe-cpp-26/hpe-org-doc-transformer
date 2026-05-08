@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     google_api_key: str 
     agent_model: str ="gemini-2.5-flash"
     finger_print_model: str = "gemini-2.5-flash"
+    groq_api_key:str
 
     # GitHub settings
     github_api_url: str

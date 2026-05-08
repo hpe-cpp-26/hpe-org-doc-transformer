@@ -42,9 +42,11 @@ def print_result(state: dict) -> None:
     candidates = format_candidates(state.get("similar_group_candidates"))
     decision = state.get("agent_decision")
     errors = state.get("errors") or []
-
+    
     print(f"\n  {'is_valid':<22}: {state.get('is_valid')}")
     print(f"  {'is_duplicate':<22}: {state.get('is_duplicate')}")
+    if state.get("fingerprint") is not None:
+        print(f"  {'fingerprint':<22}: {state.get('fingerprint')}")
     if state.get("existing_group_id"):
         print(f"  {'existing_group_id':<22}: {state['existing_group_id']}")
 
@@ -89,3 +91,4 @@ def print_result(state: dict) -> None:
             print(f"    - {err}")
 
     print(f"\n{SEPARATOR}\n")
+

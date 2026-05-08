@@ -23,7 +23,7 @@ def get_database_url() -> str:
 
 def _open_connection() -> Connection[Any]:
     try:
-        return psycopg.connect(get_database_url(), row_factory=dict_row)
+        return psycopg.connect(get_database_url(), row_factory=dict_row, autocommit=True)
     except psycopg.Error as exc:
         raise DatabaseConnectionError("Unable to connect to PostgreSQL") from exc
 

@@ -2,7 +2,12 @@ import logging
 import asyncio
 
 from config import get_settings, configure_logging
-from test_data import doc_auto_assign_payment, doc_review_agent_self_healing, doc_create_new_group
+from test_data import (
+    doc_auto_assign_payment,
+    doc_review_agent_self_healing,
+    doc_create_new_group,
+    doc_review_agent_ambiguous,
+)
 from graph.workflow import run_workflow
 from doc_types.documents import NormalisedDocument
 from formatting import SEPARATOR, print_doc_header, print_result
@@ -19,6 +24,7 @@ TEST_DOCS = [
     doc_auto_assign_payment,
     doc_review_agent_self_healing,
     doc_create_new_group,
+    doc_review_agent_ambiguous,
 ]
 
 async def main():
@@ -30,7 +36,7 @@ async def main():
     print("    ORCHESTRATOR — CLASSIFIER PIPELINE TEST")
     print(SEPARATOR)
 
-    final_state=await _run_doc(TEST_DOCS[1])
+    final_state = await _run_doc(TEST_DOCS[3])
 
     print(f"{SEPARATOR}")
     print("   ALL DOCS PROCESSED")

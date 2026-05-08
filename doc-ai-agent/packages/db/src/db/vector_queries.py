@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import ast
 from collections.abc import Iterable, Mapping, Sequence
 from typing import Any
+import logging
 
 import psycopg
 
@@ -9,6 +11,8 @@ from .connection import DatabaseConnectionError, get_connection
 from doc_types.documents import DocumentAssignment
 
 Vector = Sequence[float | int]
+
+logger = logging.getLogger(__name__)
 
 
 def _vector_literal(values: Vector) -> str:
@@ -29,36 +33,32 @@ def _run_write(query: str, params: Sequence[Any]) -> None:
     except psycopg.Error as exc:
         raise DatabaseConnectionError("Database write failed") from exc
 
-
 def search_similar_centroid(
     embedding: Vector,
-    *,  #this ensures that limit and min_similarity must be passed as keyword arguments, not positionally
+    *,
     limit: int = 10,
-    min_similarity: float | None = None,
+    min_similarity: float = 0.4,
 ) -> list[dict[str, Any]]:
     vector = _vector_literal(embedding)
+    
     query = """
+        WITH query_vec AS (
+            SELECT %s::vector AS vec
+        )
         SELECT
-            id,
-            name,
-            centroid,
-            doc_count,
-            1 - (centroid <=> %s::vector) AS similarity
-        FROM groups
-        WHERE centroid IS NOT NULL
-    """
-    params: list[Any] = [vector]
-
-    if min_similarity is not None:
-        query += "\n        AND (1 - (centroid <=> %s::vector)) >= %s"
-        params.extend([vector, min_similarity])
-
-    query += """
-        ORDER BY centroid <=> %s::vector
+            g.id,
+            g.name,
+            g.doc_count,
+            1 - (g.centroid <=> q.vec) AS similarity
+        FROM groups g, query_vec q
+        WHERE g.centroid IS NOT NULL
+        AND 1 - (g.centroid <=> q.vec) >= %s
+        ORDER BY g.centroid <=> q.vec
         LIMIT %s
     """
-    params.extend([vector, limit])
-
+    
+    params: list[Any] = [vector, min_similarity, limit]
+   
     try:
         with get_connection() as connection:
             with connection.cursor() as cursor:
@@ -68,7 +68,6 @@ def search_similar_centroid(
         raise DatabaseConnectionError("Similarity search failed") from exc
 
     return [dict(row) for row in rows]
-
 
 def insert_document(
     document_id: str,
@@ -215,3 +214,69 @@ def insert_chunks(
                     )
     except psycopg.Error as exc:  
         raise DatabaseConnectionError("Chunk insertion failed") from exc
+    
+
+def search_similar_chunks_by_group(
+    group_id: str,
+    embedding: Vector,
+    limit: int = 5,
+) -> list[dict[str, Any]]:
+    vector = _vector_literal(embedding)
+    query = """
+        WITH query_vec AS (
+            SELECT %s::vector AS vec
+        )
+        SELECT
+            dc.doc_id,
+            dc.chunk_text,
+            1 - (dc.embedding <=> q.vec) AS similarity
+        FROM document_chunks dc, query_vec q
+        WHERE dc.group_id = %s
+        ORDER BY dc.embedding <=> q.vec
+        LIMIT %s
+    """
+    try:
+        with get_connection() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(query, [vector, group_id, limit])
+                rows = cursor.fetchall()
+    except psycopg.Error as exc:
+        raise DatabaseConnectionError("Chunk similarity search failed") from exc
+
+    return [dict(row) for row in rows]
+
+
+#insert to doc_embedding_cache
+def insert_doc_embedding_cache(
+    doc_id: str,
+    embedding: Vector,
+) -> None:
+    
+    query = """
+        INSERT INTO doc_embedding_cache (doc_id, embedding)
+        VALUES (%s, %s::vector)
+        ON CONFLICT (doc_id) DO UPDATE SET
+            embedding = EXCLUDED.embedding
+    """
+    _run_write(query, [doc_id, _vector_literal(embedding)])
+    
+
+def fetch_embedding_from_cache(doc_id:str) -> Vector | None:
+    query = "SELECT embedding FROM doc_embedding_cache WHERE doc_id = %s"
+
+    try:
+        with get_connection() as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(query, [doc_id])
+                row = cursor.fetchone()
+    except psycopg.Error as exc:
+        raise DatabaseConnectionError("Document embedding cache lookup failed") from exc
+
+    if not row:
+        return None
+
+    embedding = row.get("embedding")
+    if isinstance(embedding, str):
+        embedding = ast.literal_eval(embedding)
+
+    return [float(v) for v in embedding]
