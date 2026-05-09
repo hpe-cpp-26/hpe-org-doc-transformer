@@ -13,7 +13,7 @@ members = [
     "embedding",
     "mcp-server",
     "orchestrator",
-    "queue",
+    "rabbitmq",
 ]
 
 [[package]]
@@ -1090,6 +1090,7 @@ dependencies = [
     { name = "doc-types" },
     { name = "langchain" },
     { name = "langgraph" },
+    { name = "rabbitmq" },
 ]
 
 [package.metadata]
@@ -1100,6 +1101,7 @@ requires-dist = [
     { name = "doc-types", editable = "packages/types" },
     { name = "langchain", specifier = ">=1.2.17" },
     { name = "langgraph", specifier = ">=1.1.10" },
+    { name = "rabbitmq", editable = "packages/queue" },
 ]
 
 [[package]]
@@ -1486,7 +1488,7 @@ wheels = [
 ]
 
 [[package]]
-name = "queue"
+name = "rabbitmq"
 version = "0.1.0"
 source = { editable = "packages/queue" }
 dependencies = [

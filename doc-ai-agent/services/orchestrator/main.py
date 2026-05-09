@@ -18,13 +18,12 @@ from formatting import SEPARATOR, print_doc_header, print_result
 from rabbitmq.consumer import RabbitMQConsumer
 
 
-async def process_normalised_document(doc_dict: dict[str, Any]) -> ClassifierState:
+async def process_normalised_document(doc_dict: dict[str, Any]):
     try:
         doc= NormalisedDocument(**doc_dict)
         print_doc_header(doc)
         final_state = await run_workflow(doc)
         print_result(final_state)
-        return final_state
     except Exception as e:
         logging.error(f"Error creating NormalisedDocument: {e}")
         raise
@@ -44,7 +43,7 @@ async def main():
     
     print(f"\n{SEPARATOR}")
     print("    ORCHESTRATOR — CLASSIFIER PIPELINE TEST")
-    print(f"    Listening on: {settings.normalized_events_queue}")
+    print(f"    Listening on: {settings.rabbitmq_queue}")
     print(f"    RabbitMQ: {settings.rabbitmq_url}")
     print(SEPARATOR)
 
