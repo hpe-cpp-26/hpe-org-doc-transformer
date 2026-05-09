@@ -14,6 +14,7 @@ public class t{
         System.out.println("Final enriched and norm check ");
         System.out.println("Final enriched data and norm check ");
         System.out.println("Demo check for github normalization");
+        System.out.println("Test after changing schema");
     }
     public static int binSearch(int nums[], int targetElement)
     {
