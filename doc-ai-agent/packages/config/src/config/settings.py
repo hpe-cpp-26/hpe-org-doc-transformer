@@ -47,6 +47,10 @@ class Settings(BaseSettings):
     github_base_path: str
     github_token: str
 
+    # RabbitMQ settings
+    rabbitmq_url: str
+    rabbitmq_queue: str
+
 
 @lru_cache
 def get_settings(service_name: str | None = None) -> Settings:
