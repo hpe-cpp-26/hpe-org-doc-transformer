@@ -24,32 +24,76 @@ app.post("/enrich/github", async (req, res) => {
     );
 
     
-    let readmeText = "";
+   let readmeText = "";
+   try{
 
-    try {
-      const readmeRes = await axios.get(
-        `https://api.github.com/repos/${repo}/readme`,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-            Accept: "application/vnd.github.v3+json",
-          },
+        //Here we go into the default branch
+        const defaultBranch = repoRes.data.default_branch;
+
+        //iterate the full repo tree
+        const treeRes = await axios.get(
+          `https://api.github.com/repos/${repo}/git/trees/${defaultBranch}?recursive=1`,
+          {
+            headers : process.env.GITHUB_TOKEN
+            ?{Authorization : `Bearer ${process.env.GITHUB_TOKEN}`}
+            : {}
+          }
+        );
+
+        const readmeFiles = (treeRes.data.tree || []).filter(file =>
+          file.path.toLowerCase().includes("readme")
+        );
+
+        console.log("README files found:", 
+          readmeFiles.map(f => f.path)
+        );
+
+        //get all readme contents and store in array
+        let readmeContents = [];
+
+        for(const file of readmeFiles){
+          try{
+
+              const contentRes = await axios.get(
+                `https://api.github.com/repos/${repo}/contents/${file.path}`,
+                {
+                  headers : {
+                    ...(process.env.GITHUB_TOKEN
+                      ? {Authorization : `Bearer ${process.env.GITHUB_TOKEN}`}
+                      : {}),
+                      Accept : "application/vnd.github.v3+json",
+                  },
+                }
+              );
+
+              const decoded = Buffer.from(
+                contentRes.data.content,
+                "base64"
+              ).toString("utf-8");
+              
+              readmeContents.push(
+                `#FILE: ${file.path}\n${decoded}`
+              );
+          }
+          catch(err)
+          {
+            console.log(
+              `Failed fetching README ${file.path}:`,
+              err.message
+            )
+          }
         }
+
+        //combine the contents from all Readme's
+        readmeText = readmeContents.join("\n\n");
+   }
+   catch(err)
+   {
+      console.log("Readme discovery failed:",
+        err.response?.status || err.message
       );
+   }
 
-      readmeText = Buffer.from(
-        readmeRes.data.content,
-        "base64"
-      ).toString("utf-8");
-
-    } catch (err) {
-      console.log("README not found:", err.response?.status);
-    }
-
-    // console.log("=================================");
-    // console.log("README LENGTH:", readmeText.length);
-    // console.log("README PREVIEW:", readmeText.slice(0, 100));
-    // console.log("=================================");
 
     res.json({
       repoDetails: repoRes.data,
