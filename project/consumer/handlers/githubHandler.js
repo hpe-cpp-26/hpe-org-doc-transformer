@@ -64,41 +64,33 @@ module.exports = async function (data, channel) {
         );
 
         const files = (commitRes.data.files || [])
-          .filter((file) => {
-            const filename = file.filename.toLowerCase();
+        .filter((file) => {
+          const filename = file.filename.toLowerCase();
 
-            const isImportantDoc =
-              filename.includes("readme") ||
-              filename.endsWith(".md") ||
-              filename.includes("docs") ||
-              filename.endsWith("package.json") ||
-              filename.endsWith("docker-compose.yml") ||
-              filename.endsWith(".yaml") ||
-              filename.endsWith(".yml");
+          const isImportantDoc = 
+          filename.includes("readme") || 
+          filename.endsWith(".md") ||
+          filename.includes("docs");
 
-            const isSmallPatch =
-              file.patch && file.patch.length < 1000;
+          return isImportantDoc;
+        })
+        .map((file) =>{
+          const filename = file.filename.toLowerCase();
 
-            return isImportantDoc || isSmallPatch;
-          })
-          .map((file) => {
-            const filename = file.filename.toLowerCase();
-          
-            return {
-              filename: file.filename,
-              status: file.status,
-              additions: file.additions,
-              deletions: file.deletions,
-              changes: file.changes,
-          
-              
-              patch: filename.includes("readme")
-                ? null
-                : file.patch
-                  ? file.patch.slice(0, 1000)
-                  : null,
-            };
-          });
+           return {
+            filename : file.filename,
+            status : file.status,
+            additions : file.additions,
+            deletions : file.deletions,
+            changes : file.changes,
+
+             patch : filename.includes("readme") 
+             ? null
+             : file.patch
+                ? file.patch.slice(0, 1000)
+                : null,
+           };
+        });
 
         if (files.length === 0) {
           console.log(
