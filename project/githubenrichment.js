@@ -6,94 +6,95 @@ const app = express();
 app.use(express.json());
 
 app.post("/enrich/github", async (req, res) => {
-  const { repo } = req.body;
+
+  const { repo, changedFiles } = req.body;
 
   if (!repo) {
-    return res.status(400).json({ error: "repo is required" });
+    return res.status(400).json({
+      error: "repo is required",
+    });
   }
 
   try {
-   
+
     const repoRes = await axios.get(
       `https://api.github.com/repos/${repo}`,
       {
         headers: process.env.GITHUB_TOKEN
-      ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
-      : {},
+          ? {
+              Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+            }
+          : {},
       }
     );
 
-    
-   let readmeText = "";
-   try{
+    let readmeText = "";
 
-        //Here we go into the default branch
-        const defaultBranch = repoRes.data.default_branch;
+    try {
 
-        //iterate the full repo tree
-        const treeRes = await axios.get(
-          `https://api.github.com/repos/${repo}/git/trees/${defaultBranch}?recursive=1`,
-          {
-            headers : process.env.GITHUB_TOKEN
-            ?{Authorization : `Bearer ${process.env.GITHUB_TOKEN}`}
-            : {}
-          }
+      const readmeFiles = (changedFiles || []).filter((file) => {
+
+        const lower = file.toLowerCase();
+
+        return (
+          lower.includes("readme") ||
+          lower.endsWith(".md") ||
+          lower.includes("docs")
         );
+      });
 
-        const readmeFiles = (treeRes.data.tree || []).filter(file =>
-          file.path.toLowerCase().includes("readme")
-        );
+      console.log(
+        "Changed README/doc files:",
+        readmeFiles
+      );
 
-        console.log("README files found:", 
-          readmeFiles.map(f => f.path)
-        );
+      let readmeContents = [];
 
-        //get all readme contents and store in array
-        let readmeContents = [];
+      for (const file of readmeFiles) {
 
-        for(const file of readmeFiles){
-          try{
+        try {
 
-              const contentRes = await axios.get(
-                `https://api.github.com/repos/${repo}/contents/${file.path}`,
-                {
-                  headers : {
-                    ...(process.env.GITHUB_TOKEN
-                      ? {Authorization : `Bearer ${process.env.GITHUB_TOKEN}`}
-                      : {}),
-                      Accept : "application/vnd.github.v3+json",
-                  },
-                }
-              );
+          const contentRes = await axios.get(
+            `https://api.github.com/repos/${repo}/contents/${file}`,
+            {
+              headers: {
+                ...(process.env.GITHUB_TOKEN
+                  ? {
+                      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+                    }
+                  : {}),
+                Accept: "application/vnd.github.v3+json",
+              },
+            }
+          );
 
-              const decoded = Buffer.from(
-                contentRes.data.content,
-                "base64"
-              ).toString("utf-8");
-              
-              readmeContents.push(
-                `#FILE: ${file.path}\n${decoded}`
-              );
-          }
-          catch(err)
-          {
-            console.log(
-              `Failed fetching README ${file.path}:`,
-              err.message
-            )
-          }
+          const decoded = Buffer.from(
+            contentRes.data.content,
+            "base64"
+          ).toString("utf-8");
+
+          readmeContents.push(
+            `# FILE: ${file}\n${decoded}`
+          );
+
+        } catch (err) {
+
+          console.log(
+            `Failed fetching ${file}:`,
+            err.message
+          );
         }
+      }
 
-        //combine the contents from all Readme's
-        readmeText = readmeContents.join("\n\n");
-   }
-   catch(err)
-   {
-      console.log("Readme discovery failed:",
+      readmeText = readmeContents.join("\n\n");
+
+    } catch (err) {
+
+      console.log(
+        "README extraction failed:",
         err.response?.status || err.message
       );
-   }
-
+    }
 
     res.json({
       repoDetails: repoRes.data,
@@ -101,11 +102,20 @@ app.post("/enrich/github", async (req, res) => {
     });
 
   } catch (err) {
-    console.error("Enrichment Failed:", err.message);
-    res.status(500).json({ error: "Failed to enrich data" });
+
+    console.error(
+      "Enrichment Failed:",
+      err.message
+    );
+
+    res.status(500).json({
+      error: "Failed to enrich data",
+    });
   }
 });
 
 app.listen(4000, () => {
-  console.log("Github enrichment service running on port 4000");
+  console.log(
+    "Github enrichment service running on port 4000"
+  );
 });
