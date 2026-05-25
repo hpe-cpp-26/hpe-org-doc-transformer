@@ -2,22 +2,61 @@ const crypto = require("crypto");
 
 const store = {};
 
-function generateHash(data) {
+const readmeContentStore = {};
+
+function generateHash(data){
   return crypto
     .createHash("sha256")
     .update(JSON.stringify(data))
     .digest("hex");
 }
 
-function hasChanged(key, data) {
+function hashChanged(key , data){
   const newHash = generateHash(data);
 
-  if (store[key] === newHash) {
-    return false;
+  if(store[key] === newHash)
+  {
+      return false;
   }
-
-  store[key] = newHash;
-  return true;
+    
+    store[key] = newHash;
+    return true;
 }
 
-module.exports = { hasChanged };
+    /* for new READM contents */
+
+    function getReadmeContent(key) {
+      return readmeContentStore[key] || "";
+    }
+
+    function updateReadmeContent(
+      key,
+      content
+    ){
+       readmeContentStore[key] = content;
+    }
+
+    function hashReadmeChanged(
+      key,
+      content
+    ){
+      const oldHash = generateHash(
+        getReadmeContent(key)
+      );
+
+      const newHash = 
+      generateHash(content);
+
+      return oldHash !== newHash;
+    }
+
+    module.exports = {
+
+      hashChanged,
+
+      getReadmeContent,
+
+      updateReadmeContent,
+
+      hashReadmeChanged
+    };

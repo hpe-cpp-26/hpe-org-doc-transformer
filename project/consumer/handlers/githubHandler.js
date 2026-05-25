@@ -4,8 +4,9 @@ require("dotenv").config({
   path: require("path").resolve(__dirname, "../../.env"),
 });
 
-const { hasChanged } = require("../hashStore");
+const { hasChanged, hashReadmeChanged, getReadmeContent , updateReadmeContent} = require("../hashStore");
 const { extractReadmeData } = require("../utils/readmeParser");
+const { extractAddedContent } = require("../utils/diffExtractor");
 
 module.exports = async function (data, channel) {
 
@@ -153,23 +154,72 @@ module.exports = async function (data, channel) {
     );
 
     const repoDetails = response.data.repoDetails;
-    const readme = response.data.readme;
+    
+    const readmes = 
+    response.data.readme || [];
 
-    console.log("=================================");
+    let changedReadmes = [];
 
-    console.log(
-      "README RECEIVED IN HANDLER:",
-      readme?.slice(0, 100)
-    );
+    for(const readmeObj of readmes){
 
-    console.log("=================================");
+         const file = readmeObj.file;
+         const latestContent = readmeObj.content;
 
-    const parsed = extractReadmeData(readme);
+         const readmeKey = 
+         `${repo}:${file}`;
 
-    console.log(
-      "PARSED README:",
-      parsed
-    );
+         if (
+          !hashReadmeChanged(
+            readmeKey,
+            latestContent
+          )
+         ){
+             
+              console.log(
+                `${file} has no new changes`
+              );
+
+              continue;
+         }
+
+         const oldContent = 
+         getReadmeContent(readmeKey);
+
+         const onlyNewContent = 
+         extractAddedContent(
+          oldContent,
+          latestContent
+         );
+
+         if(
+          !onlyNewContent.trim()
+         ){
+            
+          console.log(`No addec content in ${file}`);
+           continue;
+         }
+
+         console.log(`New Content found in ${file}`);
+
+         const parsed = extractReadmeData(
+          onlyNewContent
+         );
+
+         changedReadmes.push({
+
+            file,
+
+            changedContent:
+            onlyNewContent,
+
+            parsed,
+         });
+
+         updateReadmeContent(
+          readmeKey,
+          latestContent
+         );
+    }
 
     console.log(
       "Commit Details:",
@@ -185,11 +235,13 @@ module.exports = async function (data, channel) {
       description:
         repoDetails.description,
 
-      readmeSummary:
-        parsed.description || "",
+      // readmeSummary:
+      //   parsed.description || "",
 
-      features:
-        parsed.features || [],
+      // features:
+      //   parsed.features || [],
+
+      changedReadmes,
 
       commits: commitDetails,
     };
