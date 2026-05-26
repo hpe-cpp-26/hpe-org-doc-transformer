@@ -38,21 +38,39 @@ module.exports = async function (data, channel) {
           commit.id
         );
 
-        const commitRes = await axios.get(
-          `https://api.github.com/repos/${repo}/commits/${commit.id}`,
-          {
-            headers: process.env.GITHUB_TOKEN
-              ? {
-                  Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-                }
-              : {},
-          }
-        );
+       const commitRes = await axios.get(
+  `https://api.github.com/repos/${repo}/commits/${commit.id}`,
+  {
+    headers: {
+      ...(process.env.GITHUB_TOKEN
+        ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
+        : {}),
+      Accept: "application/vnd.github.v3+json",
+    },
+  }
+);
 
         const files = (commitRes.data.files || [])
 
           .filter((file) => {
 
+<<<<<<< manasvi
+          return isImportantDoc;
+        })
+        .map((file) =>{
+          const filename = file.filename.toLowerCase();
+
+           return {
+            filename : file.filename,
+            status : file.status,
+            additions : file.additions,
+            deletions : file.deletions,
+            changes : file.changes,
+
+             patch: file.patch ? file.patch.slice(0, 1000) : null,
+           };
+        });
+=======
             const filename =
               file.filename.toLowerCase();
 
@@ -92,6 +110,7 @@ module.exports = async function (data, channel) {
                   : null,
             };
           });
+>>>>>>> nihal
 
         if (files.length === 0) {
 
