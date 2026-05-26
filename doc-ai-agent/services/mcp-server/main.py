@@ -3,10 +3,6 @@ import logging
 
 from config import configure_logging, get_settings
 from tools.github.fetch_group_readme import register_fetch_group_readme_tool
-from tools.search.vector_search_by_group import register_vector_search_by_group_tool
-from tools.documents.crud_tools import register_crud_tools
-from tools.actions.action_tools import register_action_tools
-from tools.summary.summary_tool import register_summary_tool
 
 settings = get_settings()
 configure_logging(settings)
@@ -17,10 +13,6 @@ mcp = FastMCP("doc-ai-mcp-server")
 
 # Register all tools
 register_fetch_group_readme_tool(mcp)
-register_vector_search_by_group_tool(mcp)
-register_crud_tools(mcp)
-register_action_tools(mcp)
-register_summary_tool(mcp)
 
 if __name__ == "__main__":
     logger.info("MCP Server Service starting with tools:")

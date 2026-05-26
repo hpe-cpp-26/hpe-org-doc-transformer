@@ -25,6 +25,11 @@ CREATE TABLE IF NOT EXISTS document_chunks (
     embedding VECTOR(768)
 );
 
+CREATE TABLE IF NOT EXISTS doc_embedding_cache (
+    doc_id TEXT PRIMARY KEY,
+    embedding VECTOR(768),
+    created_at TIMESTAMP DEFAULT NOW()
+);
 
 --HNSW indexes for fast similarity search on vector columns
 CREATE INDEX IF NOT EXISTS groups_centroid_hnsw_idx

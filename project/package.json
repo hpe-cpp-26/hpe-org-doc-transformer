@@ -1,0 +1,21 @@
+{
+  "scripts": {
+    "rabbitmq:start": "docker compose up -d rabbitmq",
+    "server": "node server.js",
+    "consumer": "node consumer/consumer.js",
+    "github-enrichment": "node githubenrichment.js",
+    "jira-enrichment": "node jiraEnrichment.js",
+    "normalizer": "node normalization/normalizationConsumer.js",
+    "ngrok": "ngrok http 3000",
+    "dev": "concurrently \"npm run server\" \"npm run consumer\" \"npm run github-enrichment\" \"npm run jira-enrichment\" \"npm run normalizer\" \"npm run ngrok\""
+  },
+  "dependencies": {
+    "amqplib": "^1.0.3",
+    "axios": "^1.15.2",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}

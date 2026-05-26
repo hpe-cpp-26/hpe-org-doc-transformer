@@ -23,7 +23,7 @@ def get_database_url() -> str:
 
 def _open_connection() -> Connection[Any]:
     try:
-        return psycopg.connect(get_database_url(), row_factory=dict_row)
+        return psycopg.connect(get_database_url(), row_factory=dict_row, autocommit=True)
     except psycopg.Error as exc:
         raise DatabaseConnectionError("Unable to connect to PostgreSQL") from exc
 
@@ -52,3 +52,9 @@ def get_connection() -> Iterator[Connection[Any]]:
     except psycopg.Error as exc:
         close_connection()
         raise DatabaseConnectionError("Database operation failed") from exc
+    except Exception:
+        # A non-DB exception (e.g. Pydantic validation) raised after a successful
+        # query can leave the connection in an inconsistent transaction state.
+        # Reset it so the next caller gets a clean connection.
+        close_connection()
+        raise

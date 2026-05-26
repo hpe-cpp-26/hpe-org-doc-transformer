@@ -1,8 +1,9 @@
+from functools import lru_cache
+import logging
+
 from doc_types.documents import NormalisedDocument
 from doc_types.state import ClassifierState
-from langgraph import graph
 from graph.main_graph import build_graph
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ def build_initial_state(doc: NormalisedDocument)-> ClassifierState:
         agent_decision=None,
 
         #Final Decision
-        assinged_group_id =None,
+        assigned_group_id =None,
         create_new_group=None,
         github_write_status=False,
         db_update_status=None,
@@ -53,13 +54,15 @@ def build_initial_state(doc: NormalisedDocument)-> ClassifierState:
         errors=None,
     )
 
+@lru_cache(maxsize=1)
+def get_graph():
+    return build_graph()
 
-def run_workflow(doc: NormalisedDocument)-> ClassifierState:
+async def run_workflow(doc: NormalisedDocument)-> ClassifierState:
     """Runs the document classification workflow and returns the final state."""
     initial_state = build_initial_state(doc)
-    graph=build_graph()
     logger.info("Running document classification workflow.")
 
-    final_state = graph.ainvoke(initial_state)
+    final_state = await get_graph().ainvoke(initial_state)
     return final_state
 

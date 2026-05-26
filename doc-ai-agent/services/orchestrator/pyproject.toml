@@ -11,6 +11,7 @@ dependencies = [
     "doc-types",
     "langchain>=1.2.17",
     "langgraph>=1.1.10",
+    "rabbitmq",
 ]
 
 [tool.uv.sources]
@@ -18,3 +19,4 @@ classifier = { workspace = true }
 agent = { workspace = true }
 config = { workspace = true }
 doc-types = { workspace = true }
+rabbitmq = { workspace = true }

@@ -1,4 +1,7 @@
+# test_data.py
+
 from doc_types.documents import NormalisedDocument
+
 
 doc_auto_assign_payment = NormalisedDocument(
     doc_id="test-auto-assign-001",
@@ -43,7 +46,6 @@ doc_auto_assign_payment = NormalisedDocument(
         "tags": ["payments", "webhook", "idempotency", "retry", "fraud"],
     },
 )
-
 
 
 doc_review_agent_self_healing = NormalisedDocument(
@@ -170,3 +172,131 @@ doc_create_new_group = NormalisedDocument(
     },
 )
 
+
+doc_review_agent_ambiguous = NormalisedDocument(
+    doc_id="test-review-agent-ambiguous-001",
+    source="confluence",
+    title="Resilient Async Coordination — Spike Notes",
+    content="""
+    Background
+    ----------
+    This spike explores patterns for coordinating async workflows across
+    distributed providers where latency, availability, and data freshness
+    vary unpredictably.
+
+    Patterns Under Consideration
+    ----------------------------
+    - Deadline propagation
+    - Ranked fallback
+    - Partial assembly
+    - Suppression windows
+
+    Success Criteria
+    ----------------
+    Improved response assembly rate during provider degradation.
+    """,
+    metadata={
+        "author": "platform-team",
+        "created_at": "2024-05-01",
+        "project": "async-coordination",
+        "team": "backend",
+        "status": "draft",
+        "tool": "confluence",
+        "tags": ["orchestration", "resilience", "caching", "ranking", "providers"],
+    },
+)
+
+
+doc_self_healing_github = NormalisedDocument(
+    doc_id="test-self-healing-github-001",
+    source="github",
+    title="Self-Healing System — Technical Documentation",
+    content="""
+    Overview
+    --------
+    The Self-Healing System is a resilient distributed backend platform designed
+    to automatically detect, diagnose, and recover from failures without manual
+    intervention.
+
+    Features
+    --------
+    - Real-time service health monitoring
+    - Automated failure detection
+    - Self-recovery workflows
+    - Traffic rerouting
+    - Distributed logging
+    - Failure simulation
+
+    Recovery Actions
+    ----------------
+    - Restart unhealthy containers
+    - Reroute traffic
+    - Activate fallback services
+    - Roll back failed deployments
+    """,
+    metadata={
+        "author": "platform-reliability-team",
+        "created_at": "2024-06-01",
+        "project": "self-healing-system",
+        "team": "SRE",
+        "status": "active",
+        "tool": "github",
+        "tags": ["self-healing", "resilience", "fault-tolerance"],
+    },
+)
+
+
+
+doc_create_new_group_security = NormalisedDocument(
+    doc_id="test-create-new-security-001",
+    source="jira",
+    title="Threat Intelligence Correlation Engine",
+    content="""
+    Overview
+    --------
+    This document describes the design for a cybersecurity threat intelligence
+    correlation engine used to aggregate indicators of compromise (IOCs),
+    enrich attack telemetry, and generate risk-scored security incidents.
+
+    Detection Pipeline
+    ------------------
+    Security events are ingested from endpoint agents, SIEM feeds,
+    firewall logs, and cloud audit streams.
+
+    Correlation Logic
+    -----------------
+    The engine correlates:
+    - IP reputation matches
+    - Malware hash signatures
+    - Suspicious authentication patterns
+    - Geographic login anomalies
+    - Privilege escalation chains
+
+    Automated Response
+    ------------------
+    - disable compromised accounts
+    - isolate infected endpoints
+    - revoke API tokens
+    - block malicious IP ranges
+
+    Infrastructure
+    --------------
+    Kafka for streaming, Elasticsearch for telemetry indexing,
+    Redis for IOC caching.
+    """,
+    metadata={
+        "author": "security-operations-team",
+        "created_at": "2024-06-15",
+        "project": "threat-intelligence-platform",
+        "team": "security",
+        "status": "active",
+        "tool": "jira",
+        "tags": [
+            "cybersecurity",
+            "threat-intelligence",
+            "siem",
+            "incident-response",
+            "security-automation",
+        ],
+    },
+)

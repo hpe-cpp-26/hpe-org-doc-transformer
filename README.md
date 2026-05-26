@@ -14,6 +14,7 @@
 - [Week 7 — Project: Implementation and Review ](#week-7--transforming-organisational-docs-using-doc-ai-agent)
 - [Week 8 — Project: Implementation and Review](#week-8--transforming-organisational-docs-using-doc-ai-agent)
 - [Week 9 — Project: Implementation and Review](#week-9--transforming-organisational-docs-using-doc-ai-agent)
+- [Week 10 — Project: Implementation and Review](#week-9--transforming-organisational-docs-using-doc-ai-agent)
 
 ---
 
@@ -264,4 +265,14 @@ Team 1 demonstrated the knowledge ingestion pipeline, covering the flow from web
 Team 2 presented progress on the classification component, including project setup, logging configuration, database setup using PostgreSQL with pgvector, embedding model integration, and implementation of duplication checks along with vector search using confidence scores.
 The mentor reviewed and recorded the demos. Feedback for the next week included improving the normalization logic and presenting progress on MCP and agent development.
 
-_Last updated: April 2026_
+## Week 10 — Transforming Organisational Docs Using Doc AI Agent
+
+**`5/6/2026 – 13/6/2026`**
+
+The core agent and workflow pipeline were successfully implemented and demonstrated. At this stage, MCP tools had been integrated and were functioning as expected within the workflow.
+We also demonstrated the progress made in the data ingestion pipeline. An example demo was shown to explain how documents with high correlation are directly classified using normal vector search. For documents with lower confidence scores, the agent takes over the classification process by leveraging MCP tools.
+One of the MCP tools demonstrated was the fetch_group_readme tool. Based on the identified group, this tool fetches the corresponding group README from the central GitHub store. The README contains a summary of the group, providing the LLM with additional context to improve document classification accuracy and determine the most relevant group for the document.
+The mentor reviewed the progress and advised us to complete the integration between the data ingestion pipeline and the agent workflow by next week.
+
+
+_Last updated: May 2026_
