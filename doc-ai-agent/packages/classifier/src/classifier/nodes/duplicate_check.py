@@ -1,6 +1,6 @@
 
 from doc_types.state import ClassifierState
-from db.vector_queries import get_document_assignment
+from db import get_document_assignment
 from doc_types.documents import DocumentAssignment
 from db.connection import DatabaseConnectionError
 import logging

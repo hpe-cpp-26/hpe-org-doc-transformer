@@ -30,5 +30,3 @@ class SearchGroupChunksResponse(BaseModel):
     """
     group_id: str = Field(..., description="The ID of the GitHub group.")
     chunks: list[dict] = Field(..., description="A list of matching chunks with their metadata and similarity scores.")
-
-

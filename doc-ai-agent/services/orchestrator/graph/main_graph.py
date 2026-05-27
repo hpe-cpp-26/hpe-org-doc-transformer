@@ -9,13 +9,23 @@ from classifier.nodes.duplicate_check import duplicate_check
 from classifier.nodes.finger_print import generate_fingerprint
 from classifier.nodes.group_router import decide_route
 from classifier.nodes.agent_review import agent_review
-
-
+from classifier.nodes.create_node import create_new_group
+from classifier.nodes.assign_node import auto_assign
 def next_route(state: ClassifierState)-> str:
     if state["classification_route"]== "AUTO_ASSIGN":
-        return END
+        return "assign_node"
     elif state["classification_route"]== "REVIEW_BY_AGENT":
         return "agent_review"
+    elif state["classification_route"]== "CREATE_NEW_GROUP":
+        return "create_node"
+    else:
+        return END
+
+def agent_review_route(state: ClassifierState)-> str:
+    if state.get("create_new_group"):
+        return "create_node"
+    elif state.get("assigned_group_id"):
+        return "assign_node"
     else:
         return END
 
@@ -27,6 +37,8 @@ def build_graph():
     classifier.add_node("generate_fingerprint", generate_fingerprint)
     classifier.add_node("decide_route", decide_route)
     classifier.add_node("agent_review", agent_review) 
+    classifier.add_node("create_node", create_new_group)
+    classifier.add_node("assign_node", auto_assign)
     classifier.set_entry_point("validate_input")
 
     classifier.add_conditional_edges(
@@ -39,7 +51,9 @@ def build_graph():
     )
     classifier.add_edge("generate_fingerprint", "decide_route")
     classifier.add_conditional_edges("decide_route", next_route)
-    classifier.add_edge("agent_review", END)
+    classifier.add_conditional_edges("agent_review", agent_review_route)
+    classifier.add_edge("create_node", END)
+    classifier.add_edge("assign_node", END)
     
     return classifier.compile()
 

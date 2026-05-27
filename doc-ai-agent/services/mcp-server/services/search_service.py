@@ -1,6 +1,6 @@
 import logging
 from config.settings import get_settings
-from db.vector_queries import search_similar_chunks_by_group, fetch_embedding_from_cache
+from db import search_similar_chunks_by_group, fetch_embedding_from_cache
 
 class SearchService:
     def __init__(self):

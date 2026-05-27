@@ -4,7 +4,7 @@ import json
 
 from doc_types.state import ClassifierState
 from embedding.embedder import generate_embedding
-from db.vector_queries import insert_doc_embedding_cache, search_similar_centroid
+from db import insert_doc_embedding_cache, search_similar_prototypes
 from config.settings import get_settings
 import logging 
 
@@ -17,17 +17,17 @@ def decide_route(state: ClassifierState) -> ClassifierState:
         content = content.get("fingerprint", "") or json.dumps(content)
     if content is None:
         content = ""
-    embedding = list(generate_embedding(content))
+    embedding = list(generate_embedding("search_query: " + content))
     state["embedding"] = embedding
 
 
-    #Search for similar centroid groups.
-    groups = search_similar_centroid(
+    #Search for similar group prototypes and aggregate by group.
+    prototype_hits = search_similar_prototypes(
         embedding=embedding,
         limit=settings.top_k,
         min_similarity=settings.review_threshold,
     )
-    groups = groups or []
+    groups = _aggregate_group_candidates(prototype_hits or [])
     state["similar_group_candidates"] = groups
     state["top_similarity_score"] = groups[0]["similarity"] if groups else 0.0
     if not groups:
@@ -42,9 +42,37 @@ def decide_route(state: ClassifierState) -> ClassifierState:
         state["similar_group_candidates"] = groups
         state["classification_route"] = "REVIEW_BY_AGENT"
 
-        #temporary assignment until review is done
-        insert_doc_embedding_cache(state["doc_id"], embedding)
+        # Cache the embedding for later use — non-critical, log failures only
+        try:
+            insert_doc_embedding_cache(state["doc_id"], embedding)
+        except Exception as cache_exc:
+            logger.warning(
+                "decide_route: failed to cache embedding for doc '%s': %s",
+                state.get("doc_id"),
+                cache_exc,
+            )
 
     return state
+
+
+def _aggregate_group_candidates(rows: list[dict]) -> list[dict]:
+    grouped: dict[str, dict] = {}
+    for row in rows:
+        group_id = row.get("id")
+        if not group_id:
+            continue
+        existing = grouped.get(group_id)
+        similarity = float(row.get("similarity", 0.0))
+        if existing is None or similarity > existing["similarity"]:
+            grouped[group_id] = {
+                "id": group_id,
+                "name": row.get("name"),
+                "doc_count": row.get("doc_count"),
+                "proto_count": row.get("proto_count"),
+                "similarity": similarity,
+                "top_proto_index": row.get("proto_index"),
+            }
+
+    return sorted(grouped.values(), key=lambda item: item["similarity"], reverse=True)
 
     
