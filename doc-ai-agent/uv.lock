@@ -237,17 +237,23 @@ name = "classifier"
 version = "0.1.0"
 source = { editable = "packages/classifier" }
 dependencies = [
+    { name = "agent" },
     { name = "config" },
     { name = "db" },
     { name = "doc-types" },
+    { name = "embedding" },
+    { name = "httpx" },
     { name = "langchain-core" },
 ]
 
 [package.metadata]
 requires-dist = [
+    { name = "agent", editable = "packages/agent" },
     { name = "config", editable = "packages/config" },
     { name = "db", editable = "packages/db" },
     { name = "doc-types", editable = "packages/types" },
+    { name = "embedding", editable = "packages/embedding" },
+    { name = "httpx", specifier = ">=0.28.1" },
     { name = "langchain-core", specifier = ">=1.3.2" },
 ]
 

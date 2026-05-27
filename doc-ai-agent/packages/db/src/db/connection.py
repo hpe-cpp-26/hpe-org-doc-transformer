@@ -52,3 +52,9 @@ def get_connection() -> Iterator[Connection[Any]]:
     except psycopg.Error as exc:
         close_connection()
         raise DatabaseConnectionError("Database operation failed") from exc
+    except Exception:
+        # A non-DB exception (e.g. Pydantic validation) raised after a successful
+        # query can leave the connection in an inconsistent transaction state.
+        # Reset it so the next caller gets a clean connection.
+        close_connection()
+        raise

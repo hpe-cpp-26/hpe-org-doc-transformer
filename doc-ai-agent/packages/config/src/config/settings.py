@@ -1,8 +1,27 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Resolve .env relative to *this file* so the correct file is loaded
+# regardless of which directory the process is launched from.
+#
+# File layout:
+#   doc-ai-agent/           ← workspace root  (5 levels up from here)
+#     .env
+#     packages/
+#       config/
+#         src/
+#           config/
+#             settings.py   ← __file__
+_THIS_FILE = Path(__file__).resolve()
+_WORKSPACE_ROOT = _THIS_FILE.parent.parent.parent.parent.parent
+_ENV_FILE = _WORKSPACE_ROOT / ".env"
+
+# Fallback to CWD/.env in case the layout changes or the file is missing
+_ENV_PATH = str(_ENV_FILE) if _ENV_FILE.exists() else ".env"
 
 
 class Settings(BaseSettings):
@@ -15,7 +34,7 @@ class Settings(BaseSettings):
     """
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=_ENV_PATH,
         env_file_encoding="utf-8",
         case_sensitive=False,
     )

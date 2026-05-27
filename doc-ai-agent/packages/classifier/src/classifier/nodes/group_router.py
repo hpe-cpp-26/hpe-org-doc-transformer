@@ -42,8 +42,15 @@ def decide_route(state: ClassifierState) -> ClassifierState:
         state["similar_group_candidates"] = groups
         state["classification_route"] = "REVIEW_BY_AGENT"
 
-        #temporary assignment until review is done
-        insert_doc_embedding_cache(state["doc_id"], embedding)
+        # Cache the embedding for later use — non-critical, log failures only
+        try:
+            insert_doc_embedding_cache(state["doc_id"], embedding)
+        except Exception as cache_exc:
+            logger.warning(
+                "decide_route: failed to cache embedding for doc '%s': %s",
+                state.get("doc_id"),
+                cache_exc,
+            )
 
     return state
 

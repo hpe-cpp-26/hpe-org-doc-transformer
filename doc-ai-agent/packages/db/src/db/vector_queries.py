@@ -97,7 +97,7 @@ def insert_document(
     )
 
 
-def get_document_assignment(document_id: str) ->DocumentAssignment:
+def get_document_assignment(document_id: str) -> DocumentAssignment:
     query = "SELECT group_id, embedding, path FROM documents WHERE id = %s"
 
     try:
@@ -111,10 +111,18 @@ def get_document_assignment(document_id: str) ->DocumentAssignment:
     if not row:
         return DocumentAssignment(group_id=None, embedding=None, path=None)
 
+    # pgvector returns the embedding column as a raw string '[0.1,0.2,...]'.
+    # Parse it into list[float] so Pydantic validation passes.
+    raw_embedding = row.get("embedding")
+    if isinstance(raw_embedding, str):
+        raw_embedding = ast.literal_eval(raw_embedding)
+    if raw_embedding is not None:
+        raw_embedding = [float(v) for v in raw_embedding]
+
     return DocumentAssignment(
         group_id=row.get("group_id"),
-        embedding=row.get("embedding"),
-        path=row.get("path")
+        embedding=raw_embedding,
+        path=row.get("path"),
     )
 
 def update_document(
