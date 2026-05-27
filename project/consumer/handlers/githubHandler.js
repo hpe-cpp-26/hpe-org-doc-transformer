@@ -4,7 +4,7 @@ require("dotenv").config({
   path: require("path").resolve(__dirname, "../../.env"),
 });
 
-const { hasChanged, hashReadmeChanged, getReadmeContent , updateReadmeContent} = require("../hashStore");
+const { hashChanged, hashReadmeChanged, getReadmeContent , updateReadmeContent} = require("../hashStore");
 const { extractReadmeData } = require("../utils/readmeParser");
 const { extractAddedContent } = require("../utils/diffExtractor");
 
@@ -38,60 +38,53 @@ module.exports = async function (data, channel) {
           commit.id
         );
 
-        const commitRes = await axios.get(
-          `https://api.github.com/repos/${repo}/commits/${commit.id}`,
-          {
-            headers: process.env.GITHUB_TOKEN
-              ? {
-                  Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-                }
-              : {},
-          }
-        );
+       const commitRes = await axios.get(
+  `https://api.github.com/repos/${repo}/commits/${commit.id}`,
+  {
+    headers: {
+      ...(process.env.GITHUB_TOKEN
+        ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
+        : {}),
+      Accept: "application/vnd.github.v3+json",
+    },
+  }
+);
 
-        const files = (commitRes.data.files || [])
+        const files = await Promise.all(
+  (commitRes.data.files || [])
+    .filter((file) => {
+      const filename = file.filename.toLowerCase();
+      return filename.includes("readme") ||
+             filename.endsWith(".md") ||
+             filename.includes("docs");
+    })
+    .map(async (file) => {
+      const contentRes = await axios.get(
+        `https://api.github.com/repos/${repo}/contents/${file.filename}`,
+        {
+          headers: {
+            ...(process.env.GITHUB_TOKEN
+              ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
+              : {}),
+            Accept: "application/vnd.github.v3+json",
+          },
+        }
+      );
 
-          .filter((file) => {
+      const fullContent = Buffer.from(
+        contentRes.data.content, "base64"
+      ).toString("utf-8");
 
-            const filename =
-              file.filename.toLowerCase();
-
-            const isImportantDoc =
-              filename.includes("readme") ||
-              filename.endsWith(".md") ||
-              filename.includes("docs");
-
-
-            if (isImportantDoc) {
-              changedReadmeFiles.push(
-                file.filename
-              );
-            }
-
-            return isImportantDoc;
-          })
-
-          .map((file) => {
-
-            const filename =
-              file.filename.toLowerCase();
-
-            return {
-
-              filename: file.filename,
-              status: file.status,
-
-              additions: file.additions,
-              deletions: file.deletions,
-              changes: file.changes,
-
-              patch: filename.includes("readme")
-                ? null
-                : file.patch
-                  ? file.patch.slice(0, 1000)
-                  : null,
-            };
-          });
+      return {
+        filename: file.filename,
+        status: file.status,
+        additions: file.additions,
+        deletions: file.deletions,
+        changes: file.changes,
+        patch: fullContent,
+      };
+    })
+);
 
         if (files.length === 0) {
 
@@ -251,7 +244,7 @@ module.exports = async function (data, channel) {
       JSON.stringify(fullData, null, 2)
     );
 
-    if (!hasChanged(repo, fullData)) {
+    if (!hashChanged(repo, fullData)) {
 
       console.log(
         "Github data has not changed"
