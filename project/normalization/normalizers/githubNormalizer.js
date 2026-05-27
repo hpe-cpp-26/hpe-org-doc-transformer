@@ -14,14 +14,10 @@ function extractChangedLines(patch) {
 module.exports = function normalizeGithub({ payload, fullData }) {
 
   const changedFilesContent = (fullData.commits || [])
-    .flatMap(commit => commit.files || [])
-    .filter(file => file.patch)
-    .map(file => {
-      const changed = extractChangedLines(file.patch);
-      return changed ? `FILE: ${file.filename}\n${changed}` : null;
-    })
-    .filter(Boolean)
-    .join("\n\n");
+  .flatMap(commit => commit.files || [])
+  .filter(file => file.patch)
+  .map(file => `FILE: ${file.filename}\n${file.patch}`)
+  .join("\n\n");
 
   const contentParts = [
     fullData.description,

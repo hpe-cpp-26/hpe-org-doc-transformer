@@ -64,30 +64,41 @@ module.exports = async function (data, channel) {
   }
 );
 
-        const files = (commitRes.data.files || [])
-        .filter((file) => {
-          const filename = file.filename.toLowerCase();
+        const files = await Promise.all(
+  (commitRes.data.files || [])
+    .filter((file) => {
+      const filename = file.filename.toLowerCase();
+      return filename.includes("readme") ||
+             filename.endsWith(".md") ||
+             filename.includes("docs");
+    })
+    .map(async (file) => {
+      const contentRes = await axios.get(
+        `https://api.github.com/repos/${repo}/contents/${file.filename}`,
+        {
+          headers: {
+            ...(process.env.GITHUB_TOKEN
+              ? { Authorization: `Bearer ${process.env.GITHUB_TOKEN}` }
+              : {}),
+            Accept: "application/vnd.github.v3+json",
+          },
+        }
+      );
 
-          const isImportantDoc = 
-          filename.includes("readme") || 
-          filename.endsWith(".md") ||
-          filename.includes("docs");
+      const fullContent = Buffer.from(
+        contentRes.data.content, "base64"
+      ).toString("utf-8");
 
-          return isImportantDoc;
-        })
-        .map((file) =>{
-          const filename = file.filename.toLowerCase();
-
-           return {
-            filename : file.filename,
-            status : file.status,
-            additions : file.additions,
-            deletions : file.deletions,
-            changes : file.changes,
-
-             patch: file.patch ? file.patch.slice(0, 1000) : null,
-           };
-        });
+      return {
+        filename: file.filename,
+        status: file.status,
+        additions: file.additions,
+        deletions: file.deletions,
+        changes: file.changes,
+        patch: fullContent,
+      };
+    })
+);
 
         if (files.length === 0) {
           console.log(
