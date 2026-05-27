@@ -1,19 +1,12 @@
 from .connection import close_connection, get_connection, get_database_url
-from .vector_queries import (
-    insert_chunks,
-    insert_document,
-    search_similar_centroid,
-    update_centroid,
-    update_document,
-)
+from .documents import insert_document, get_document_assignment, update_document
+from .groups import search_similar_centroid, search_similar_prototypes, update_centroid, insert_new_group
+from .chunks import insert_chunks, search_similar_chunks_by_group
+from .cache import insert_doc_embedding_cache, fetch_embedding_from_cache
+from .ingestion import write_to_db
 
 """
 The __all__ variable defines the public API of this package. 
-It specifies which names are intended to be accessible 
-when someone imports * from this module. By listing these names, 
-we make it clear which functions are meant to be used by external code,
-and we can also prevent accidental access to internal functions or
-variables that are not part of the public interface.
 """
 
 __all__ = [
@@ -23,6 +16,14 @@ __all__ = [
     "insert_chunks",
     "insert_document",
     "search_similar_centroid",
+    "search_similar_prototypes",
     "update_centroid",
     "update_document",
+    "insert_doc_embedding_cache",
+    "fetch_embedding_from_cache",
+    "search_similar_chunks_by_group",
+    "get_document_assignment",
+    "insert_new_group",
+    "write_to_db",
 ]
+

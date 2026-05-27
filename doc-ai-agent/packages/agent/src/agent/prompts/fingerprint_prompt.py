@@ -5,7 +5,7 @@ FINGERPRINT_PROMPT = ChatPromptTemplate.from_messages([
     ("system", """You are a semantic indexing engine for enterprise project documentation.
 
 Your task is to generate a SEMANTIC FINGERPRINT of a document. This fingerprint will be 
-converted to a vector embedding and compared against group centroids to determine which 
+converted to a vector embedding with the search_query prefix and compared against group prototypes to determine which 
 project group this document belongs to.
 
 CRITICAL CONTEXT:
@@ -15,7 +15,7 @@ CRITICAL CONTEXT:
   * Jira: "Epic: User Auth Module" | GitHub: "auth-service README" | Confluence: "Authentication Architecture"
   * These are the SAME project concept expressed differently
 - Your fingerprint must capture the TOOL-AGNOSTIC project identity so that all three 
-  match to the same group centroid
+   match to the same group prototype
 
 FINGERPRINT CONSTRUCTION RULES:
 

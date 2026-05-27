@@ -7,9 +7,10 @@ from datetime import date
 from doc_types.state import ClassifierState
 from agent.llm import get_llm
 from agent.prompts.readme_prompt import NEW_GROUP_README_PROMPT
+from classifier.ingestion.ingest import detect_doc_info, ingest_document
+from classifier.prototypes import assign_group
 from classifier.utils.github_client import GitHubClient
-from db.connection import get_connection
-from db.vector_queries import insert_document, update_centroid
+from db import insert_new_group
 
 logger = logging.getLogger(__name__)
 
@@ -103,7 +104,7 @@ async def create_new_group(state: ClassifierState) -> ClassifierState:
             await github.aclose()
 
        
-        state["assigned_group_id"] = group_name
+        state["assigned_group_id"] = None
         state["github_write_status"] = "created"
         state["readme_update_status"] = "created"
         decision_path.append("create_node")
@@ -112,49 +113,38 @@ async def create_new_group(state: ClassifierState) -> ClassifierState:
         logger.info("create_node: group '%s' created successfully on GitHub", group_name)
 
        
-        embedding: list[float] | None = state.get("embedding")
-        if embedding:
-            try:
-                group_uuid = str(uuid.uuid4())
-                with get_connection() as conn:
-                    with conn.transaction():
-                        with conn.cursor() as cur:
-                            cur.execute(
-                                """
-                                INSERT INTO groups (id, name, centroid, doc_count)
-                                VALUES (%s, %s, NULL, 0)
-                                ON CONFLICT (id) DO NOTHING
-                                """,
-                                [group_uuid, group_name],
-                            )
+        try:
+            #new group created
+            group_uuid = str(uuid.uuid4())
+            insert_new_group(group_uuid, group_name, group_summary=readme_content)
 
-                insert_document(
-                    document_id=state["doc_id"],
-                    path=state.get("source"),
-                    group_id=group_uuid,
-                    content=state.get("content"),
-                    embedding=embedding,
-                )
+            content = state.get("content") or ""
+            doc_info = detect_doc_info(content, title=state.get("title"))
             
-                update_centroid(group_uuid, embedding, doc_count=1)
-                state["db_update_status"] = "created"
-                logger.info(
-                    "create_node: DB row created for group '%s' (uuid=%s)",
-                    group_name, group_uuid,
-                )
-            except Exception as db_exc:
-                logger.error(
-                    "create_node: DB write failed for group '%s': %s",
-                    group_name, db_exc,
-                )
-                errors.append(f"create_node DB write: {type(db_exc).__name__}: {db_exc}")
-                state["db_update_status"] = "error"
-        else:
-            logger.warning(
-                "create_node: no embedding in state — skipping DB write for group '%s'",
-                group_name,
+            #[TODO: Dharshan][mid]- set correct doc path
+            doc_path =f"{group_name}/{state.get("source")}/{state.get('doc_id')}"
+            ingest_document(
+                doc_id=state["doc_id"],
+                doc_path=doc_path,
+                group_id=group_uuid,
+                content=content,
+                doc_info=doc_info,
             )
-            state["db_update_status"] = "skipped"
+
+            # assign_group(state["doc_id"], group_uuid)
+            state["assigned_group_id"] = group_uuid
+            state["db_update_status"] = "created"
+            logger.info(
+                "create_node: DB row created for group '%s' (uuid=%s)",
+                group_name, group_uuid,
+            )
+        except Exception as db_exc:
+            logger.error(
+                "create_node: DB write failed for group '%s': %s",
+                group_name, db_exc,
+            )
+            errors.append(f"create_node DB write: {type(db_exc).__name__}: {db_exc}")
+            state["db_update_status"] = "error"
 
     except Exception as exc:
         error_msg = f"create_node: {type(exc).__name__}: {exc}"
