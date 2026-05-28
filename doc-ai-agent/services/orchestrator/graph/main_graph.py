@@ -22,9 +22,9 @@ def next_route(state: ClassifierState)-> str:
         return END
 
 def agent_review_route(state: ClassifierState)-> str:
-    if state.get("create_new_group"):
+    if state.get("classification_route") == "CREATE_NEW_GROUP":
         return "create_node"
-    elif state.get("assigned_group_id"):
+    elif state.get("classification_route") == "AUTO_ASSIGN":
         return "assign_node"
     else:
         return END
@@ -47,7 +47,7 @@ def build_graph():
     )
     classifier.add_conditional_edges(
         "check_duplicate",
-        lambda s: END if s["is_duplicate"] else "generate_fingerprint"
+        lambda s: "assign_node" if s["is_duplicate"] else "generate_fingerprint"
     )
     classifier.add_edge("generate_fingerprint", "decide_route")
     classifier.add_conditional_edges("decide_route", next_route)

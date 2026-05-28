@@ -5,42 +5,6 @@ from .connection import get_connection, DatabaseConnectionError
 import psycopg
 
 
-def search_similar_centroid(
-    embedding: Vector,
-    *,
-    limit: int = 10,
-    min_similarity: float = 0.4,
-) -> list[dict[str, Any]]:
-    vector = _vector_literal(embedding)
-    
-    query = """
-        WITH query_vec AS (
-            SELECT %s::vector AS vec
-        )
-        SELECT
-            g.id,
-            g.name,
-            g.doc_count,
-            1 - (g.centroid <=> q.vec) AS similarity
-        FROM groups g, query_vec q
-        WHERE g.centroid IS NOT NULL
-        AND 1 - (g.centroid <=> q.vec) >= %s
-        ORDER BY g.centroid <=> q.vec
-        LIMIT %s
-    """
-    
-    params: list[Any] = [vector, min_similarity, limit]
-   
-    try:
-        with get_connection(autocommit=True) as connection:
-            with connection.cursor() as cursor:
-                cursor.execute(query, params)
-                rows = cursor.fetchall()
-    except psycopg.Error as exc:
-        raise DatabaseConnectionError("Similarity search failed") from exc
-
-    return [dict(row) for row in rows]
-
 
 def search_similar_prototypes(
     embedding: Vector,
@@ -81,31 +45,85 @@ def search_similar_prototypes(
 
     return [dict(row) for row in rows]
 
-
-
-def update_centroid(
-    group_id: str,
-    centroid: Vector,
+def search_similar_buffer(
+    embedding: Vector,
     *,
-    doc_count: int | None = None,
-) -> None:
-    assignments = ["centroid = %s::vector"]
-    params: list[Any] = [_vector_literal(centroid)]
+    limit: int = 20,
+    min_similarity: float = 0.4,
+) -> list[dict[str, Any]]:
+    vector = _vector_literal(embedding)
 
-    if doc_count is not None:
-        assignments.append("doc_count = %s")
-        params.append(doc_count)
+    query = """
+        WITH query_vec AS (
+            SELECT %s::vector AS vec
+        )
+        SELECT
+            pb.group_id AS id,
+            g.group_name AS name,
+            g.doc_count,
+            g.proto_count,
+            pb.segment_index AS proto_index,
+            1 - (pb.embedding <=> q.vec) AS similarity
+        FROM prototype_buffer pb
+        JOIN groups g ON g.id = pb.group_id
+        JOIN query_vec q ON TRUE
+        WHERE 1 - (pb.embedding <=> q.vec) >= %s
+        ORDER BY pb.embedding <=> q.vec
+        LIMIT %s
+    """
 
-    params.append(group_id)
+    params: list[Any] = [vector, min_similarity, limit]
 
-    _run_write(
-        f"""
-        UPDATE groups
-        SET {", ".join(assignments)}
-        WHERE id = %s
-        """,
-        params,
-    )
+    try:
+        with get_connection(autocommit=True) as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(query, params)
+                rows = cursor.fetchall()
+    except psycopg.Error as exc:
+        raise DatabaseConnectionError("Buffer similarity search failed") from exc
+
+    return [dict(row) for row in rows]
+
+
+def search_similar_segments(
+    embedding: Vector,
+    *,
+    limit: int = 20,
+    min_similarity: float = 0.35,
+) -> list[dict[str, Any]]:
+    vector = _vector_literal(embedding)
+
+    query = """
+        WITH query_vec AS (
+            SELECT %s::vector AS vec
+        )
+        SELECT
+            ds.group_id AS id,
+            g.group_name AS name,
+            g.doc_count,
+            g.proto_count,
+            ds.segment_index AS proto_index,
+            1 - (ds.embedding <=> q.vec) AS similarity
+        FROM document_segments ds
+        JOIN groups g ON g.id = ds.group_id
+        JOIN query_vec q ON TRUE
+        WHERE ds.group_id IS NOT NULL
+        AND 1 - (ds.embedding <=> q.vec) >= %s
+        ORDER BY ds.embedding <=> q.vec
+        LIMIT %s
+    """
+
+    params: list[Any] = [vector, min_similarity, limit]
+
+    try:
+        with get_connection(autocommit=True) as connection:
+            with connection.cursor() as cursor:
+                cursor.execute(query, params)
+                rows = cursor.fetchall()
+    except psycopg.Error as exc:
+        raise DatabaseConnectionError("Segment similarity search failed") from exc
+
+    return [dict(row) for row in rows]
 
 def insert_new_group(
     group_id: str,
@@ -120,9 +138,9 @@ def insert_new_group(
     """
     params = [group_id, group_name, group_summary]
 
-    # if conn is None:
-    #     _run_write(query, params)
-    #     return
+    if conn is None:
+        _run_write(query, params)
+        return
 
     with conn.cursor() as cursor:
         cursor.execute(query, params)

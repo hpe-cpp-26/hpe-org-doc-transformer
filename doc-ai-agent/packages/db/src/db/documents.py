@@ -49,11 +49,10 @@ def get_document_assignment(document_id: str) -> DocumentAssignment:
     if not row:
         return DocumentAssignment(group_id=None, embedding=None, path=None)
 
-    raw_embedding = fetch_embedding_from_cache(document_id)
+
 
     return DocumentAssignment(
         group_id=row.get("group_id"),
-        embedding=raw_embedding,
         path=row.get("doc_path"),
     )
 

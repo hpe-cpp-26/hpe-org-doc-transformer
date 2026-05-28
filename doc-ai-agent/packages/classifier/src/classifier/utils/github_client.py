@@ -33,24 +33,23 @@ class GitHubClient:
     async def aclose(self) -> None:
         await self._client.aclose()
 
-    # ------------------------------------------------------------------
-    # Internal helpers
-    # ------------------------------------------------------------------
-
+   
     def _headers(self) -> dict[str, str]:
         return {
             "Authorization": f"Bearer {self._token}",
             "Accept": "application/vnd.github.v3+json",
         }
 
-    def _readme_url(self, group_name: str) -> str:
-        path = f"{self._base_path}/{group_name}/README.md"
-        return f"{self._api_url}/repos/{self._org}/{self._repo}/contents/{path}"
+    def _file_url(self, file_path: str) -> str:
+        return f"{self._api_url}/repos/{self._org}/{self._repo}/contents/{file_path}"
 
-    async def _get_file_sha(self, group_name: str) -> Optional[str]:
-        """Return the blob SHA of an existing README, or None if it doesn't exist."""
+    def _readme_path(self, group_name: str) -> str:
+        return f"{self._base_path}/{group_name}/README.md"
+
+    async def _get_file_sha(self, file_path: str) -> Optional[str]:
+        """Return the blob SHA of an existing file, or None if it doesn't exist."""
         try:
-            resp = await self._client.get(self._readme_url(group_name), headers=self._headers())
+            resp = await self._client.get(self._file_url(file_path), headers=self._headers())
             if resp.status_code == 404:
                 return None
             resp.raise_for_status()
@@ -58,18 +57,34 @@ class GitHubClient:
         except httpx.HTTPStatusError:
             return None
 
-    # ------------------------------------------------------------------
-    # Public API
-    # ------------------------------------------------------------------
-
+    
     async def get_readme(self, group_name: str) -> str:
         """Fetch and decode the README.md for *group_name*. Raises on HTTP errors."""
-        resp = await self._client.get(self._readme_url(group_name), headers=self._headers())
+        resp = await self._client.get(self._file_url(self._readme_path(group_name)), headers=self._headers())
         resp.raise_for_status()
         data = resp.json()
         content = base64.b64decode(data["content"]).decode("utf-8")
         logger.info("Fetched README for group=%s", group_name)
         return content
+
+    async def create_or_update_file(
+        self,
+        file_path: str,
+        content: str,
+        commit_message: str,
+    ) -> dict:
+        encoded = base64.b64encode(content.encode()).decode()
+        payload = {"message": commit_message, "content": encoded}
+
+        sha = await self._get_file_sha(file_path)
+        if sha is not None:
+            payload["sha"] = sha
+
+        resp = await self._client.put(
+            self._file_url(file_path), headers=self._headers(), json=payload
+        )
+        resp.raise_for_status()
+        return resp.json()
 
     async def create_readme(
         self,
@@ -82,19 +97,11 @@ class GitHubClient:
         If file exists, fetches its SHA and updates it.
         If file doesn't exist, creates it.
         """
-        encoded = base64.b64encode(readme_content.encode()).decode()
-        payload = {"message": commit_message, "content": encoded}
-        
-        # Check if file already exists and get its SHA
-        sha = await self._get_file_sha(group_name)
-        if sha is not None:
-            payload["sha"] = sha
-        
-        resp = await self._client.put(
-            self._readme_url(group_name), headers=self._headers(), json=payload
+        data = await self.create_or_update_file(
+            self._readme_path(group_name),
+            readme_content,
+            commit_message,
         )
-        resp.raise_for_status()
-        data = resp.json()
         logger.info(
             "Created/Updated README for group=%s | commit=%s",
             group_name,
@@ -112,20 +119,11 @@ class GitHubClient:
         Overwrite an existing README.md. Fetches the current SHA first.
         Falls back to create_readme if the file doesn't exist.
         """
-        sha = await self._get_file_sha(group_name)
-        if sha is None:
-            logger.warning(
-                "README for group=%s not found; creating instead of updating.", group_name
-            )
-            return await self.create_readme(group_name, new_content, commit_message)
-
-        encoded = base64.b64encode(new_content.encode()).decode()
-        payload = {"message": commit_message, "content": encoded, "sha": sha}
-        resp = await self._client.put(
-            self._readme_url(group_name), headers=self._headers(), json=payload
+        data = await self.create_or_update_file(
+            self._readme_path(group_name),
+            new_content,
+            commit_message,
         )
-        resp.raise_for_status()
-        data = resp.json()
         logger.info(
             "Updated README for group=%s | commit=%s",
             group_name,

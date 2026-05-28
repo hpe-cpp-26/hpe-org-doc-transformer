@@ -22,7 +22,6 @@ def duplicate_check(state: ClassifierState) -> ClassifierState:
             state["is_duplicate"] = True
             state["existing_group_id"] = res.group_id
             state["existing_path"] = res.path
-            state["embedding"] = res.embedding
             state["classification_route"] = "AUTO_ASSIGN"
             state["create_new_group"] = False
         else:

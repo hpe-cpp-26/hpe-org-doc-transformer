@@ -39,8 +39,10 @@ async def agent_review(state: ClassifierState) -> ClassifierState:
         if decision["decision"] == "ASSIGN":
             state["assigned_group_id"] = decision["assigned_group_id"]
             state["existing_group_id"] = decision["assigned_group_id"]
+            state["classification_route"] = "AUTO_ASSIGN"
         else:
             state["assigned_group_id"] = None
+            state["classification_route"] = "CREATE_NEW_GROUP"
 
         decision_path = state.get("decision_path")
         if isinstance(decision_path, list):
@@ -65,6 +67,7 @@ async def agent_review(state: ClassifierState) -> ClassifierState:
     }
     state["create_new_group"] = True
     state["assigned_group_id"] = None
+    state["classification_route"] = "CREATE_NEW_GROUP"
 
     decision_path = state.get("decision_path")
     if isinstance(decision_path, list):

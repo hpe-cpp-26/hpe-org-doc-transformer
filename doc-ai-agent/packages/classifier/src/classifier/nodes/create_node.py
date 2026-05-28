@@ -4,7 +4,7 @@ import re
 import uuid
 from doc_types.state import ClassifierState
 from agent.llm import get_llm
-from agent.prompts.readme_prompt import NEW_GROUP_README_PROMPT
+from agent.prompts.readme_prompt import NEW_GROUP_README_PROMPT, NEW_GROUP_NAME_PROMPT
 from classifier.ingestion.ingest import  ingest_document
 from classifier.utils.github_client import GitHubClient
 from db import get_connection, insert_new_group
@@ -12,6 +12,7 @@ from classifier.ingestion.chunking import chunk_document
 from classifier.ingestion.embedding import embed_chunks
 from classifier.ingestion.segments import build_segment_embeddings
 from classifier.ingestion.detection import detect_doc_info
+from config.settings import get_settings
 logger = logging.getLogger(__name__)
 
 
@@ -55,6 +56,33 @@ def _resolve_group_description(state: ClassifierState) -> str:
     return f"Document group for {state.get('title', 'unknown project')}."
 
 
+def _doc_filename(doc_id: str) -> str:
+    if doc_id.lower().endswith(".md"):
+        return doc_id
+    return f"{doc_id}.md"
+
+
+def _build_doc_path(base_path: str, group_name: str, source: str, doc_id: str) -> str:
+    safe_source = source or "unknown-source"
+    safe_doc_id = _doc_filename(doc_id)
+    return f"{base_path}/{group_name}/{safe_source}/{safe_doc_id}"
+
+
+def _generate_group_name(state: ClassifierState, llm) -> str:
+    prompt_value = NEW_GROUP_NAME_PROMPT.invoke(
+        {
+            "title": state.get("title", ""),
+            "source": state.get("source", ""),
+            "metadata": json.dumps(state.get("metadata") or {}, indent=2),
+            "content": (state.get("content") or "")[:3000],
+        }
+    )
+    llm_response = llm.invoke(prompt_value)
+    raw_name = getattr(llm_response, "content", str(llm_response)).strip()
+    slugified = _slugify(raw_name)
+    return slugified or _resolve_group_name(state)
+
+
 async def create_new_group(state: ClassifierState) -> ClassifierState:
     """
     LangGraph node — CREATE path.
@@ -67,14 +95,14 @@ async def create_new_group(state: ClassifierState) -> ClassifierState:
     errors: list[str] = list(state.get("errors") or [])
     decision_path: list[str] = list(state.get("decision_path") or [])
 
-    group_name = _resolve_group_name(state)
+    llm = get_llm(thinking=False)
+    group_name = _generate_group_name(state, llm)
     group_description = _resolve_group_description(state)
 
     logger.info("create_node: creating new group '%s'", group_name)
 
     try:
       
-        llm = get_llm(thinking=False)
         prompt_value = NEW_GROUP_README_PROMPT.invoke(
             {
                 "group_name": group_name,
@@ -101,6 +129,16 @@ async def create_new_group(state: ClassifierState) -> ClassifierState:
             )
             logger.info("GROUP NAME: %s", group_name)
             await github.create_readme(group_name, readme_content, commit_message)
+
+            doc_id = state.get("doc_id") or "unknown-doc"
+            base_path = get_settings().github_base_path
+            source = state.get("source") or "unknown-source"
+            doc_path = _build_doc_path(base_path, group_name, source, doc_id)
+            await github.create_or_update_file(
+                doc_path,
+                state.get("content") or "",
+                f"chore: add doc '{doc_id}' to group '{group_name}'",
+            )
         finally:
             await github.aclose()
 
@@ -123,8 +161,10 @@ async def create_new_group(state: ClassifierState) -> ClassifierState:
 
 
 
-            # [TODO: Dharshan][mid]- set correct doc path
-            doc_path = f"{group_name}/{state.get('source')}/{state.get('doc_id')}" if state.get('source') and state.get('doc_id') else "unknown_path"
+            base_path = get_settings().github_base_path
+            source = state.get("source") or "unknown-source"
+            doc_id = state.get("doc_id") or "unknown-doc"
+            doc_path = _build_doc_path(base_path, group_name, source, doc_id)
             chunks = chunk_document(content, doc_info)
 
             embed_chunks(chunks)
