@@ -1,6 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 require("dotenv").config();
+const cheerio = require("cheerio");
 
 const app = express();
 app.use(express.json());
@@ -10,7 +11,26 @@ const EMAIL = process.env.CONFLUENCE_EMAIL;
 const API_TOKEN = process.env.CONFLUENCE_API_TOKEN;
 
 function cleanHTML(html) {
-  return html.replace(/<[^>]+>/g, '').trim();
+  const $ = cheerio.load(html);
+
+  $("br").replaceWith("\n");
+
+  $("p, div, h1, h2, h3, h4, h5, li").append("\n");
+
+  $("tr").each((_, row) => {
+    $(row).append("\n");
+  });
+
+  $("td, th").each((_, cell) => {
+    $(cell).append(" | ");
+  });
+
+  return $("body")
+    .text()
+    .replace(/\| \n/g, "\n")
+    .replace(/\n{2,}/g, "\n")
+    .replace(/[ \t]+/g, " ")
+    .trim();
 }
 
 async function fetchPage(pageId, version = null) {
