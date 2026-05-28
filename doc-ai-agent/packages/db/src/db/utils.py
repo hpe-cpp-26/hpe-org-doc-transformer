@@ -1,3 +1,4 @@
+import ast
 from collections.abc import Sequence
 from typing import Any
 import psycopg
@@ -13,8 +14,15 @@ def _vector_literal(values: Vector) -> str:
 def _run_write(query: str, params: Sequence[Any]) -> None:
     try:
         with get_connection() as connection:
-            with connection.transaction():
+            with connection.transaction(): 
                 with connection.cursor() as cursor:
                     cursor.execute(query, params)
     except psycopg.Error as exc:
         raise DatabaseConnectionError("Database write failed") from exc
+    
+
+
+def parse_embedding(raw: Any) -> list[float]:
+    if isinstance(raw, str):
+        raw = ast.literal_eval(raw)
+    return [float(v) for v in raw]

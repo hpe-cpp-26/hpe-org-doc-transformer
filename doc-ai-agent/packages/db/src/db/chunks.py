@@ -54,7 +54,7 @@ def search_similar_chunks_by_group(
         LIMIT %s
     """
     try:
-        with get_connection() as connection:
+        with get_connection(autocommit=True) as connection:
             with connection.cursor() as cursor:
                 cursor.execute(query, [vector, group_id, limit])
                 rows = cursor.fetchall()

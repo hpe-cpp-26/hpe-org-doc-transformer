@@ -6,6 +6,7 @@ from typing import Any, Iterator
 import psycopg
 from psycopg import Connection
 from psycopg.rows import dict_row
+from psycopg_pool import ConnectionPool
 
 from config import get_settings
 
@@ -14,47 +15,58 @@ class DatabaseConnectionError(RuntimeError):
     """Raised when PostgreSQL cannot be reached or a connection becomes unusable."""
 
 
-_connection: Connection[Any] | None = None
+_pool: ConnectionPool | None = None
+_autocommit_pool: ConnectionPool | None = None
 
 
 def get_database_url() -> str:
     return get_settings().database_url
 
 
-def _open_connection() -> Connection[Any]:
-    try:
-        return psycopg.connect(get_database_url(), row_factory=dict_row, autocommit=True)
-    except psycopg.Error as exc:
-        raise DatabaseConnectionError("Unable to connect to PostgreSQL") from exc
+def _get_pool(autocommit: bool = False) -> ConnectionPool:
+    global _pool, _autocommit_pool
+
+    if autocommit:
+        if _autocommit_pool is None:
+            _autocommit_pool = ConnectionPool(
+                conninfo=get_database_url(),
+                kwargs={
+                    "row_factory": dict_row,
+                    "autocommit": True,
+                },
+                min_size=2,
+                max_size=10,
+                open=True,
+            )
+        return _autocommit_pool
+    else:
+        if _pool is None:
+            _pool = ConnectionPool(
+                conninfo=get_database_url(),
+                kwargs={
+                    "row_factory": dict_row,
+                },
+                min_size=2,
+                max_size=10,
+                open=True,
+            )
+        return _pool
 
 
-def _get_or_create_connection() -> Connection[Any]:
-    global _connection
-
-    if _connection is None or _connection.closed:
-        _connection = _open_connection()
-    return _connection
-
-
-def close_connection() -> None:
-    global _connection
-
-    if _connection is not None and not _connection.closed:
-        _connection.close()
-    _connection = None
+def close_pools() -> None:
+    global _pool, _autocommit_pool
+    for pool in (_pool, _autocommit_pool):
+        if pool is not None:
+            pool.close()
+    _pool = None
+    _autocommit_pool = None
 
 
 @contextmanager
-def get_connection() -> Iterator[Connection[Any]]:
-    connection = _get_or_create_connection()
+def get_connection(autocommit: bool = False) -> Iterator[Connection[Any]]:
+    pool = _get_pool(autocommit=autocommit)
     try:
-        yield connection
+        with pool.connection() as conn:
+            yield conn
     except psycopg.Error as exc:
-        close_connection()
         raise DatabaseConnectionError("Database operation failed") from exc
-    except Exception:
-        # A non-DB exception (e.g. Pydantic validation) raised after a successful
-        # query can leave the connection in an inconsistent transaction state.
-        # Reset it so the next caller gets a clean connection.
-        close_connection()
-        raise

@@ -74,7 +74,7 @@ def register_vector_search_by_group_tool(mcp: FastMCP):
         params.extend([vector_literal, limit])
 
         try:
-            with get_connection() as connection:
+            with get_connection(autocommit=True) as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(query, params)
                     rows = cursor.fetchall()

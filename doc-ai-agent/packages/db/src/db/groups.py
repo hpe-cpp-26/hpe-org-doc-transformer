@@ -32,7 +32,7 @@ def search_similar_centroid(
     params: list[Any] = [vector, min_similarity, limit]
    
     try:
-        with get_connection() as connection:
+        with get_connection(autocommit=True) as connection:
             with connection.cursor() as cursor:
                 cursor.execute(query, params)
                 rows = cursor.fetchall()
@@ -72,7 +72,7 @@ def search_similar_prototypes(
     params: list[Any] = [vector, min_similarity, limit]
 
     try:
-        with get_connection() as connection:
+        with get_connection(autocommit=True) as connection:
             with connection.cursor() as cursor:
                 cursor.execute(query, params)
                 rows = cursor.fetchall()
@@ -108,16 +108,22 @@ def update_centroid(
     )
 
 def insert_new_group(
-        group_id: str,
-        group_name: str,
-        group_summary: str,
+    group_id: str,
+    group_name: str,
+    group_summary: str,
+    conn: Any | None = None,
 ) -> None:
-    _run_write(
-        """
+    query = """
         INSERT INTO groups (id, group_name, group_summary, doc_count, proto_count)
         VALUES (%s, %s, %s, 0, 0)
         ON CONFLICT (id) DO NOTHING
-        """,
-        [group_id, group_name, group_summary]
-    )
+    """
+    params = [group_id, group_name, group_summary]
+
+    # if conn is None:
+    #     _run_write(query, params)
+    #     return
+
+    with conn.cursor() as cursor:
+        cursor.execute(query, params)
     

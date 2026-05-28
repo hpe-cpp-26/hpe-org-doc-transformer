@@ -11,27 +11,27 @@ def build_segment_embeddings(chunks: list[dict[str, Any]]) -> list[dict[str, Any
     n = len(chunks)
 
     if n <= 4:
-        return [_segment_from_chunks(chunks, 0)]
+        return [segment_from_chunks(chunks, 0)]
 
     if n <= 12:
-        return _split_segments(chunks, 2)
+        return split_segments(chunks, 2)
 
     if n <= 24:
-        return _split_segments(chunks, 3)
+        return split_segments(chunks, 3)
 
     # large doc — semantic clustering
     # min 5 chunks per segment
     n_segments = min(5, max(2, n // 5))
-    return _cluster_segments(chunks, n_segments)
+    return cluster_segments(chunks, n_segments)
 
 
-def _segment_from_chunks(
+def segment_from_chunks(
     chunks: list[dict[str, Any]],
     segment_index: int,
 ) -> dict[str, Any]:
     # use embedding (search_document prefix) for pooling
     # word_count as weight so longer chunks contribute more
-    pooled = _weighted_pool(
+    pooled = weighted_pool(
         [chunk["embedding"] for chunk in chunks],
         [max(chunk["word_count"], 1) for chunk in chunks],
     )
@@ -42,7 +42,7 @@ def _segment_from_chunks(
     }
 
 
-def _split_segments(
+def split_segments(
     chunks: list[dict[str, Any]],
     n_segments: int,
 ) -> list[dict[str, Any]]:
@@ -54,20 +54,20 @@ def _split_segments(
         segment_chunks = chunks[start:end]
         if not segment_chunks:
             continue
-        result.append(_segment_from_chunks(segment_chunks, idx))
+        result.append(segment_from_chunks(segment_chunks, idx))
     return result
 
 #groups by semantic similarity of chunk embeddings using k-means clustering
-def _cluster_segments(
+def cluster_segments(
     chunks: list[dict[str, Any]],
     k: int,
 ) -> list[dict[str, Any]]:
     vectors = [chunk["embedding"] for chunk in chunks]
-    centroids = _kmeans(vectors, k)
+    centroids = kmeans(vectors, k)
 
     assignments: list[list[int]] = [[] for _ in range(k)]
     for idx, vec in enumerate(vectors):
-        nearest = _nearest_centroid(vec, centroids)
+        nearest = nearest_centroid(vec, centroids)
         assignments[nearest].append(idx)
 
     segments: list[dict[str, Any]] = []
@@ -76,13 +76,13 @@ def _cluster_segments(
         if not cluster_indices:
             continue
         segment_chunks = [chunks[i] for i in cluster_indices]
-        segments.append(_segment_from_chunks(segment_chunks, seg_idx))
+        segments.append(segment_from_chunks(segment_chunks, seg_idx))
         seg_idx += 1
 
     return segments
 
 
-def _weighted_pool(
+def weighted_pool(
     embeddings: Sequence[Sequence[float]],
     weights: Sequence[int],
 ) -> list[float]:
@@ -108,7 +108,7 @@ def _weighted_pool(
     return l2_normalize(pooled)
 
 
-def _kmeans(
+def kmeans(
     vectors: list[list[float]],
     k: int,
     iterations: int = 30,
@@ -124,7 +124,7 @@ def _kmeans(
     for _ in range(iterations):
         buckets: list[list[list[float]]] = [[] for _ in range(k)]
         for vec in vectors:
-            buckets[_nearest_centroid(vec, centroids)].append(vec)
+            buckets[nearest_centroid(vec, centroids)].append(vec)
 
         new_centroids: list[list[float]] = []
         for i, bucket in enumerate(buckets):
@@ -137,7 +137,7 @@ def _kmeans(
     return centroids
 
 
-def _nearest_centroid(
+def nearest_centroid(
     vec: list[float],
     centroids: list[list[float]],
 ) -> int:
@@ -149,4 +149,32 @@ def _nearest_centroid(
             best_score = score
             best_idx = idx
     return best_idx
+
+
+def kmeans(
+    vectors: list[list[float]],
+    k: int,
+    iterations: int = 30,
+) -> list[list[float]]:
+    if k <= 0:
+        raise ValueError("k must be positive")
+    k = min(k, len(vectors))
+
+    indices = random.sample(range(len(vectors)), k)
+    centroids = [vectors[i][:] for i in indices]
+
+    for _ in range(iterations):
+        buckets: list[list[list[float]]] = [[] for _ in range(k)]
+        for vec in vectors:
+            buckets[nearest_centroid(vec, centroids)].append(vec)
+
+        new_centroids: list[list[float]] = []
+        for i, bucket in enumerate(buckets):
+            if not bucket:
+                new_centroids.append(centroids[i])
+            else:
+                new_centroids.append(mean_vector(bucket))
+        centroids = new_centroids
+
+    return centroids
 

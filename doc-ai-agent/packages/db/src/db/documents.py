@@ -1,42 +1,42 @@
-from db.utils import Vector, _run_write, _vector_literal
+from db.utils import Vector, _run_write
 from db.connection import get_connection, DatabaseConnectionError
+from db.cache import fetch_embedding_from_cache, insert_doc_embedding_cache
 from doc_types.documents import DocumentAssignment
 import psycopg
 from typing import Any
-import ast
 
 
 
 def insert_document(
     document_id: str,
-    path: str | None,
+    doc_path: str | None,
     group_id: str | None,
     content: str | None,
-    embedding: Vector,
+    *,
+    segment_count: int = 1,
+    embedding: Vector | None = None,
 ) -> None:
-    """Upsert a document and its embedding. 
-       If the document ID already exists, all fields will be overwritten with 
-       the new values.
-
-       EXCLUDE : special temporary table that holds the values proposed for insertion in case of a conflict.
-    """
+    """Upsert a document and optionally cache its embedding."""
     _run_write(
         """
-        INSERT INTO documents (id, path, group_id, content, embedding, updated_at)
-        VALUES (%s, %s, %s, %s, %s::vector, NOW())
+        INSERT INTO documents (id, doc_path, group_id, content, segment_count, updated_at)
+        VALUES (%s, %s, %s, %s, %s, NOW())
         ON CONFLICT (id) DO UPDATE SET
-            path = EXCLUDED.path,
+            doc_path = EXCLUDED.doc_path,
             group_id = EXCLUDED.group_id,
             content = EXCLUDED.content,
-            embedding = EXCLUDED.embedding,
+            segment_count = EXCLUDED.segment_count,
             updated_at = NOW()
         """,
-        [document_id, path, group_id, content, _vector_literal(embedding)],
+        [document_id, doc_path, group_id, content, segment_count],
     )
+
+    if embedding is not None:
+        insert_doc_embedding_cache(document_id, embedding)
 
 
 def get_document_assignment(document_id: str) -> DocumentAssignment:
-    query = "SELECT group_id, embedding, path FROM documents WHERE id = %s"
+    query = "SELECT group_id, doc_path FROM documents WHERE id = %s"
 
     try:
         with get_connection() as connection:
@@ -49,43 +49,41 @@ def get_document_assignment(document_id: str) -> DocumentAssignment:
     if not row:
         return DocumentAssignment(group_id=None, embedding=None, path=None)
 
-    # pgvector returns the embedding column as a raw string '[0.1,0.2,...]'.
-    # Parse it into list[float] so Pydantic validation passes.
-    raw_embedding = row.get("embedding")
-    if isinstance(raw_embedding, str):
-        raw_embedding = ast.literal_eval(raw_embedding)
-    if raw_embedding is not None:
-        raw_embedding = [float(v) for v in raw_embedding]
+    raw_embedding = fetch_embedding_from_cache(document_id)
 
     return DocumentAssignment(
         group_id=row.get("group_id"),
         embedding=raw_embedding,
-        path=row.get("path"),
+        path=row.get("doc_path"),
     )
 
+#[TODO: Dharshan][high] fix document update
 def update_document(
     document_id: str,
     *,
-    path: str | None = None,
+    doc_path: str | None = None,
     group_id: str | None = None,
     content: str | None = None,
     embedding: Vector | None = None,
+    segment_count: int | None = None,
 ) -> None:
     assignments: list[str] = []
     params: list[Any] = []
 
-    if path is not None:
-        assignments.append("path = %s")
-        params.append(path)
+    if doc_path is not None:
+        assignments.append("doc_path = %s")
+        params.append(doc_path)
     if group_id is not None:
         assignments.append("group_id = %s")
         params.append(group_id)
     if content is not None:
         assignments.append("content = %s")
         params.append(content)
+    if segment_count is not None:
+        assignments.append("segment_count = %s")
+        params.append(segment_count)
     if embedding is not None:
-        assignments.append("embedding = %s::vector")
-        params.append(_vector_literal(embedding))
+        insert_doc_embedding_cache(document_id, embedding)
 
     if not assignments:
         raise ValueError("At least one field must be supplied when updating a document")

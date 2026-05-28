@@ -118,7 +118,7 @@ def register_crud_tools(mcp: FastMCP):
         logger.info("Reading document: %s", doc_id)
 
         try:
-            with get_connection() as connection:
+            with get_connection(autocommit=True) as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
                         """

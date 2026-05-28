@@ -2,16 +2,16 @@ import json
 import logging
 import re
 import uuid
-from datetime import date
-
 from doc_types.state import ClassifierState
 from agent.llm import get_llm
 from agent.prompts.readme_prompt import NEW_GROUP_README_PROMPT
-from classifier.ingestion.ingest import detect_doc_info, ingest_document
-from classifier.prototypes import assign_group
+from classifier.ingestion.ingest import  ingest_document
 from classifier.utils.github_client import GitHubClient
-from db import insert_new_group
-
+from db import get_connection, insert_new_group
+from classifier.ingestion.chunking import chunk_document
+from classifier.ingestion.embedding import embed_chunks
+from classifier.ingestion.segments import build_segment_embeddings
+from classifier.ingestion.detection import detect_doc_info
 logger = logging.getLogger(__name__)
 
 
@@ -92,13 +92,14 @@ async def create_new_group(state: ClassifierState) -> ClassifierState:
         logger.debug(
             "create_node: generated README for '%s' (%d chars)", group_name, len(readme_content)
         )
-
+        logger.info("readme_content: %s", readme_content)
         
         github = GitHubClient()
         try:
             commit_message = (
                 f"chore: create group '{group_name}' for doc '{state.get('doc_id')}'"
             )
+            logger.info("GROUP NAME: %s", group_name)
             await github.create_readme(group_name, readme_content, commit_message)
         finally:
             await github.aclose()
@@ -114,24 +115,40 @@ async def create_new_group(state: ClassifierState) -> ClassifierState:
 
        
         try:
-            #new group created
+            # new group created
             group_uuid = str(uuid.uuid4())
-            insert_new_group(group_uuid, group_name, group_summary=readme_content)
 
             content = state.get("content") or ""
             doc_info = detect_doc_info(content, title=state.get("title"))
-            
-            #[TODO: Dharshan][mid]- set correct doc path
-            doc_path =f"{group_name}/{state.get("source")}/{state.get('doc_id')}"
-            ingest_document(
-                doc_id=state["doc_id"],
-                doc_path=doc_path,
-                group_id=group_uuid,
-                content=content,
-                doc_info=doc_info,
-            )
 
-            # assign_group(state["doc_id"], group_uuid)
+
+
+            # [TODO: Dharshan][mid]- set correct doc path
+            doc_path = f"{group_name}/{state.get('source')}/{state.get('doc_id')}" if state.get('source') and state.get('doc_id') else "unknown_path"
+            chunks = chunk_document(content, doc_info)
+
+            embed_chunks(chunks)
+            segments = build_segment_embeddings(chunks)
+
+            with get_connection() as conn:
+                with conn.transaction():
+                    insert_new_group(
+                        group_uuid,
+                        group_name,
+                        group_summary=readme_content,
+                        conn=conn,
+                    )
+                    ingest_document(
+                        doc_id=state["doc_id"],
+                        doc_path=doc_path,
+                        group_id=group_uuid,
+                        content=content,
+                        doc_info=doc_info,
+                        chunks=chunks,
+                        segments=segments,
+                        conn=conn,
+                    )
+
             state["assigned_group_id"] = group_uuid
             state["db_update_status"] = "created"
             logger.info(

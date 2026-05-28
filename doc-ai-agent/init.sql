@@ -30,9 +30,8 @@ CREATE TABLE IF NOT EXISTS document_segments (
     group_id TEXT REFERENCES groups(id),
     segment_index INT NOT NULL default 0,
     embedding VECTOR(768),
-    created_at TIMESTAMP DEFAULT NOW()
-
-    unique(doc_id, segment_index)
+    created_at TIMESTAMP DEFAULT NOW(),
+    UNIQUE (doc_id, segment_index)
 );
 
 CREATE TABLE IF NOT EXISTS document_chunks (
@@ -44,8 +43,7 @@ CREATE TABLE IF NOT EXISTS document_chunks (
     chunk_text TEXT,
     embedding VECTOR(768),
     created_at TIMESTAMP DEFAULT NOW(),
-
-    unique(doc_id, chunk_index)
+    UNIQUE (doc_id, chunk_index)
 );
 
 

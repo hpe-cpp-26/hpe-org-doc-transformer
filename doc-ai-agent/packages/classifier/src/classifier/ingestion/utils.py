@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import ast
 import math
 import re
 from collections.abc import Iterable, Sequence
+
+from typing import Any
 
 
 def split_words(text: str) -> list[str]:
@@ -45,3 +48,5 @@ def mean_vector(vectors: Iterable[Sequence[float]]) -> list[float]:
 
 def cosine_similarity(a: Sequence[float], b: Sequence[float]) -> float:
     return sum(float(x) * float(y) for x, y in zip(a, b))
+
+

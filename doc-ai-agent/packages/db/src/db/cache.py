@@ -22,7 +22,7 @@ def fetch_embedding_from_cache(doc_id:str) -> Vector | None:
     query = "SELECT embedding FROM doc_embedding_cache WHERE doc_id = %s"
 
     try:
-        with get_connection() as connection:
+        with get_connection(autocommit=True) as connection:
             with connection.cursor() as cursor:
                 cursor.execute(query, [doc_id])
                 row = cursor.fetchone()

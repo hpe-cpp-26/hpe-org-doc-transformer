@@ -1,16 +1,16 @@
-from .connection import close_connection, get_connection, get_database_url
+from .connection import  get_connection, get_database_url
 from .documents import insert_document, get_document_assignment, update_document
 from .groups import search_similar_centroid, search_similar_prototypes, update_centroid, insert_new_group
 from .chunks import insert_chunks, search_similar_chunks_by_group
 from .cache import insert_doc_embedding_cache, fetch_embedding_from_cache
 from .ingestion import write_to_db
+from .prototypes import refresh_buffer_for_doc, refresh_doc_count, count_buffered, fetch_buffer_embeddings
 
 """
 The __all__ variable defines the public API of this package. 
 """
 
 __all__ = [
-    "close_connection",
     "get_connection",
     "get_database_url",
     "insert_chunks",
@@ -25,5 +25,11 @@ __all__ = [
     "get_document_assignment",
     "insert_new_group",
     "write_to_db",
+    "insert_into_proto_buffer",
+    "delete_proto_buffer",
+    "refresh_buffer_for_doc",
+    "refresh_doc_count",
+    "count_buffered",
+    "fetch_buffer_embeddings"
 ]
 

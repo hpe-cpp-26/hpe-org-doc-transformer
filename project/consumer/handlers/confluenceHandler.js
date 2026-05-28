@@ -1,9 +1,5 @@
 const axios = require("axios");
-const { hasChanged } = require("../hashStore");
-
-function cleanHTML(html) {
-  return html.replace(/<[^>]+>/g, '').trim();
-}
+const { hashChanged } = require("../hashStore");
 
 module.exports = async function (data, channel) {
   const { payload } = data;
@@ -21,15 +17,12 @@ module.exports = async function (data, channel) {
 
     const enriched = response.data.pageDetails;
 
-    const content = enriched.content;
-    const cleanText = cleanHTML(content);
-
     const fullData = {
       pageId: enriched.id,
       title: enriched.title,
       version: enriched.version,
-      content: cleanText,
-      summary: cleanText.slice(0, 200),
+      content: enriched.content,
+      summary: enriched.summary,
       space: payload.page?.spaceKey,
       url: payload.page?.self,
       updatedBy: {
@@ -44,8 +37,8 @@ module.exports = async function (data, channel) {
     };
 
     console.log("CONFLUENCE FULL DATA:", JSON.stringify(fullData, null, 2));
-    
-    if (!hasChanged(pageId, fullData)) {
+
+    if (!hashChanged(pageId, fullData)) {
       console.log("Confluence no change");
       return;
     }
