@@ -70,6 +70,9 @@ class Settings(BaseSettings):
     rabbitmq_url: str
     rabbitmq_queue: str
 
+    #group_settings
+    min_groups_for_review: int =4
+
 
 @lru_cache
 def get_settings(service_name: str | None = None) -> Settings:

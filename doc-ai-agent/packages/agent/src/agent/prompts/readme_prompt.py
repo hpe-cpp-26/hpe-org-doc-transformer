@@ -45,6 +45,31 @@ Generate the complete README.md now.
     ),
 ])
 
+NEW_GROUP_NAME_PROMPT = ChatPromptTemplate.from_messages([
+    (
+        "system",
+        """You generate short, descriptive group names for document collections.
+
+Rules:
+- Use 2-5 words that reflect the document's content and domain.
+- Do NOT include company names unless they appear in the content.
+- Do NOT include dates, IDs, or punctuation.
+- Output plain text only, no quotes or formatting.
+""",
+    ),
+    (
+        "human",
+        """DOCUMENT TITLE: {title}
+SOURCE: {source}
+METADATA: {metadata}
+
+CONTENT:
+{content}
+
+Return the group name only.""",
+    ),
+])
+
 
 UPDATE_GROUP_README_PROMPT = ChatPromptTemplate.from_messages([
     (

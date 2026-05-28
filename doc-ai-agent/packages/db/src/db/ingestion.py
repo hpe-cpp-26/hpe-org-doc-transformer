@@ -15,6 +15,18 @@ def write_to_db(
 ) -> None:
     with conn.cursor() as cursor:
         cursor.execute(
+            "DELETE FROM document_chunks WHERE doc_id = %s",
+            [doc_id],
+        )
+        cursor.execute(
+            "DELETE FROM document_segments WHERE doc_id = %s",
+            [doc_id],
+        )
+        cursor.execute(
+            "DELETE FROM prototype_buffer WHERE doc_id = %s",
+            [doc_id],
+        )
+        cursor.execute(
             """
             INSERT INTO documents (id, doc_path, group_id, content, segment_count)
             VALUES (%s, %s, %s, %s, %s)

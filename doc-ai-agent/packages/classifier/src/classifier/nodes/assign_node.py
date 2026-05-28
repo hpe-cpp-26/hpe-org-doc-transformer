@@ -5,9 +5,14 @@ from datetime import date
 from doc_types.state import ClassifierState
 from agent.llm import get_llm
 from agent.prompts.readme_prompt import UPDATE_GROUP_README_PROMPT
+from classifier.ingestion.ingest import ingest_document
 from classifier.utils.github_client import GitHubClient
-from db.connection import get_connection
-from db.vector_queries import insert_document, update_centroid
+from classifier.ingestion.detection import detect_doc_info
+from classifier.ingestion.chunking import chunk_document
+from classifier.ingestion.embedding import embed_chunks
+from classifier.ingestion.segments import build_segment_embeddings
+from db import get_connection
+from config.settings import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +94,7 @@ async def auto_assign(state: ClassifierState) -> ClassifierState:
                 "source": state.get("source", "N/A"),
                 "fingerprint": state.get("fingerprint", "N/A"),
                 "metadata": json.dumps(state.get("metadata") or {}, indent=2),
-                "content": (state.get("content") or "")[:3000],
+                "content": (state.get("content") or ""),
                 "today": date.today().isoformat(),
             }
         )
@@ -102,66 +107,69 @@ async def auto_assign(state: ClassifierState) -> ClassifierState:
             len(updated_readme),
         )
 
-        # --- 3. Commit to GitHub ---
         commit_message = (
             f"chore: assign doc '{state.get('doc_id')}' to group '{group_name}'"
         )
         await github.update_readme(group_name, updated_readme, commit_message)
 
+        base_path = get_settings().github_base_path
+        source = state.get("source") or "unknown-source"
+        doc_id = state.get("doc_id") or "unknown-doc"
+        doc_filename = doc_id if doc_id.lower().endswith(".md") else f"{doc_id}.md"
+        doc_path = state.get("existing_path") or (
+            f"{base_path}/{group_name}/{source}/{doc_filename}"
+        )
+        await github.create_or_update_file(
+            doc_path,
+            state.get("content") or "",
+            f"chore: update doc '{doc_id}' in group '{group_name}'",
+        )
+
         # --- 4. Update state markers ---
         state["github_write_status"] = "updated"
         state["readme_update_status"] = "updated"
-        state["assigned_group_id"] = group_name   # surface the resolved group name
+        # keep assigned_group_id as the DB group id
         decision_path.append("assign_node")
         state["decision_path"] = decision_path
 
         logger.info("assign_node: README for group '%s' updated successfully", group_name)
 
-        # --- 5. Persist the document and update group centroid in the DB ---
+        # --- 5. Assign the document to the group and update prototypes ---
         group_id = state.get("assigned_group_id") or state.get("existing_group_id")
-        embedding: list[float] | None = state.get("embedding")
-        if group_id and embedding:
+        if group_id:
             try:
-                insert_document(
-                    document_id=state["doc_id"],
-                    path=state.get("source"),
-                    group_id=group_id,
-                    content=state.get("content"),
-                    embedding=embedding,
+                content = state.get("content") or ""
+                doc_info = detect_doc_info(content, title=state.get("title"))
+                doc_id = state.get("doc_id") or "unknown-doc"
+                base_path = get_settings().github_base_path
+                source = state.get("source") or "unknown-source"
+                doc_filename = (
+                    doc_id if doc_id.lower().endswith(".md") else f"{doc_id}.md"
+                )
+                doc_path = state.get("existing_path") or (
+                    f"{base_path}/{group_name}/{source}/{doc_filename}"
                 )
 
-                # Incrementally update the centroid: weighted average of old centroid + new doc
+                chunks = chunk_document(content, doc_info)
+                embed_chunks(chunks)
+                segments = build_segment_embeddings(chunks)
+
                 with get_connection() as conn:
-                    with conn.cursor() as cur:
-                        cur.execute(
-                            "SELECT centroid, doc_count FROM groups WHERE id = %s",
-                            [group_id],
+                    with conn.transaction():
+                        ingest_document(
+                            doc_id=doc_id,
+                            doc_path=doc_path,
+                            group_id=group_id,
+                            content=content,
+                            doc_info=doc_info,
+                            chunks=chunks,
+                            segments=segments,
+                            conn=conn,
                         )
-                        row = cur.fetchone()
-
-                if row and row.get("centroid") is not None:
-                    import ast
-                    raw_centroid = row["centroid"]
-                    # pgvector returns centroid as a string '[0.1,...]' in psycopg3
-                    if isinstance(raw_centroid, str):
-                        raw_centroid = ast.literal_eval(raw_centroid)
-                    old_centroid = [float(v) for v in raw_centroid]
-                    old_count = row.get("doc_count") or 1
-                    new_count = old_count + 1
-                    # Weighted average: (old_centroid * old_count + new_embedding) / new_count
-                    new_centroid = [
-                        (old_centroid[i] * old_count + embedding[i]) / new_count
-                        for i in range(len(embedding))
-                    ]
-                    update_centroid(group_id, new_centroid, doc_count=new_count)
-                else:
-                    # No existing centroid — set this doc's embedding as the centroid
-                    update_centroid(group_id, embedding, doc_count=1)
-
                 state["db_update_status"] = "updated"
                 logger.info(
                     "assign_node: DB updated for group '%s' (doc_id=%s)",
-                    group_name, state["doc_id"],
+                    group_name, doc_id,
                 )
             except Exception as db_exc:
                 logger.error(
@@ -172,7 +180,7 @@ async def auto_assign(state: ClassifierState) -> ClassifierState:
                 state["db_update_status"] = "error"
         else:
             logger.warning(
-                "assign_node: missing group_id or embedding — skipping DB write for group '%s'",
+                "assign_node: missing group_id — skipping DB write for group '%s'",
                 group_name,
             )
             state["db_update_status"] = "skipped"
