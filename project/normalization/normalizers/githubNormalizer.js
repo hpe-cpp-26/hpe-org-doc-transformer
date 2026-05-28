@@ -14,10 +14,14 @@ function extractChangedLines(patch) {
 module.exports = function normalizeGithub({ payload, fullData }) {
 
   const changedFilesContent = (fullData.commits || [])
-  .flatMap(commit => commit.files || [])
-  .filter(file => file.patch)
-  .map(file => `FILE: ${file.filename}\n${file.patch}`)
-  .join("\n\n");
+    .flatMap(commit => commit.files || [])
+    .filter(file => file.patch)
+    .map(file => {
+      const changed = extractChangedLines(file.patch);
+      return changed ? `FILE: ${file.filename}\n${changed}` : null;
+    })
+    .filter(Boolean)
+    .join("\n\n");
 
   const contentParts = [
     fullData.description,
@@ -28,8 +32,35 @@ module.exports = function normalizeGithub({ payload, fullData }) {
     .filter(Boolean)
     .join("\n");
 
+    const firstFile =
+    (fullData.commits || [])
+
+      .flatMap(
+        commit => commit.files || []
+      )
+
+      .find(
+        file => file.filename
+      );
+
+  const filePath =
+    firstFile?.filename ||
+    "unknown-file";
+
+  const sanitizedFilePath =
+    filePath.replace(/\//g, "-");
+
+  const repoName =
+    fullData.repo
+      ?.split("/")
+      ?.pop() ||
+    "unknown-repo";
+
+  const generatedDocId =
+    `${repoName}-${sanitizedFilePath}`;
+
   return buildNormalizedEvent({
-    doc_id: String(payload.repository?.id || fullData.repo),
+    doc_id : generatedDocId,
     source: "github",
     title: fullData.name || fullData.repo || "GitHub Repository",
     content,
