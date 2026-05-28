@@ -6,7 +6,7 @@ function buildNormalizedEvent({
   metadata = {},
 }) {
 
-  if (!doc_id || !source || !content) {
+  if (!doc_id || !source) {
     throw new Error(
       `Normalization error: missing required fields`
     );
