@@ -5,22 +5,11 @@ from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Resolve .env relative to *this file* so the correct file is loaded
-# regardless of which directory the process is launched from.
-#
-# File layout:
-#   doc-ai-agent/           ← workspace root  (5 levels up from here)
-#     .env
-#     packages/
-#       config/
-#         src/
-#           config/
-#             settings.py   ← __file__
 _THIS_FILE = Path(__file__).resolve()
 _WORKSPACE_ROOT = _THIS_FILE.parent.parent.parent.parent.parent
 _ENV_FILE = _WORKSPACE_ROOT / ".env"
 
-# Fallback to CWD/.env in case the layout changes or the file is missing
+
 _ENV_PATH = str(_ENV_FILE) if _ENV_FILE.exists() else ".env"
 
 
@@ -57,8 +46,9 @@ class Settings(BaseSettings):
     google_api_key: str 
     agent_model: str ="gemini-2.5-flash"
     finger_print_model: str = "gemini-2.5-flash"
-    groq_api_key:str
-    use_local:str=True
+    groq_api_key: str | None = None
+    groq_api_keys: str | None = None
+    use_local:bool=False
 
     # GitHub settings
     github_api_url: str
