@@ -151,30 +151,4 @@ def nearest_centroid(
     return best_idx
 
 
-def kmeans(
-    vectors: list[list[float]],
-    k: int,
-    iterations: int = 30,
-) -> list[list[float]]:
-    if k <= 0:
-        raise ValueError("k must be positive")
-    k = min(k, len(vectors))
-
-    indices = random.sample(range(len(vectors)), k)
-    centroids = [vectors[i][:] for i in indices]
-
-    for _ in range(iterations):
-        buckets: list[list[list[float]]] = [[] for _ in range(k)]
-        for vec in vectors:
-            buckets[nearest_centroid(vec, centroids)].append(vec)
-
-        new_centroids: list[list[float]] = []
-        for i, bucket in enumerate(buckets):
-            if not bucket:
-                new_centroids.append(centroids[i])
-            else:
-                new_centroids.append(mean_vector(bucket))
-        centroids = new_centroids
-
-    return centroids
 
