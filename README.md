@@ -311,7 +311,7 @@ Identified a key limitation in the current approach: as the number of documents 
 **`5/29/2026 – 6/4/2026`**
 
 > What Was Done
--Presented a complete end-to-end demo of the project to the mentor.
+- Presented a complete end-to-end demo of the project to the mentor.
 The demo used GitHub and Confluence as the two classification targets, walking through the full pipeline from document ingestion to classification.
 Explained the system architecture end-to-end, covering how documents are normalised, embedded, clustered using medoids, and classified via cosine similarity search.
 > 
@@ -325,7 +325,7 @@ Design
 Troubleshooting
 
 > Next Steps
--Implement the higher-level document type classification layer (Requirements / Design / Troubleshooting) on top of the existing source-level  classification.
+- Implement the higher-level document type classification layer (Requirements / Design / Troubleshooting) on top of the existing source-level  classification.
 Build out the RAG-based search interface
 
 _Last updated: June 2026_
