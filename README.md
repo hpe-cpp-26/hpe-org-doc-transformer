@@ -14,7 +14,9 @@
 - [Week 7 — Project: Implementation and Review ](#week-7--transforming-organisational-docs-using-doc-ai-agent)
 - [Week 8 — Project: Implementation and Review](#week-8--transforming-organisational-docs-using-doc-ai-agent)
 - [Week 9 — Project: Implementation and Review](#week-9--transforming-organisational-docs-using-doc-ai-agent)
-- [Week 10 — Project: Implementation and Review](#week-9--transforming-organisational-docs-using-doc-ai-agent)
+- [Week 10 — Project: Implementation and Review](#week-10--transforming-organisational-docs-using-doc-ai-agent)
+- [Week 11 — Project: Implementation and Review](#week-11--transforming-organisational-docs-using-doc-ai-agent)
+- [Week 12 — Project: Implementation and Review](#week-12--transforming-organisational-docs-using-doc-ai-agent)
 
 ---
 
@@ -267,12 +269,63 @@ The mentor reviewed and recorded the demos. Feedback for the next week included 
 
 ## Week 10 — Transforming Organisational Docs Using Doc AI Agent
 
-**`5/6/2026 – 13/6/2026`**
+**`5/6/2026 – 5/13/2026`**
 
 The core agent and workflow pipeline were successfully implemented and demonstrated. At this stage, MCP tools had been integrated and were functioning as expected within the workflow.
 We also demonstrated the progress made in the data ingestion pipeline. An example demo was shown to explain how documents with high correlation are directly classified using normal vector search. For documents with lower confidence scores, the agent takes over the classification process by leveraging MCP tools.
 One of the MCP tools demonstrated was the fetch_group_readme tool. Based on the identified group, this tool fetches the corresponding group README from the central GitHub store. The README contains a summary of the group, providing the LLM with additional context to improve document classification accuracy and determine the most relevant group for the document.
 The mentor reviewed the progress and advised us to complete the integration between the data ingestion pipeline and the agent workflow by next week.
 
+## Week 11 — Transforming Organisational Docs Using Doc AI Agent
 
-_Last updated: May 2026_
+**`5/13/2026 – 5/29/2026`**
+
+### Similarity Search Optimisation 
+Identified a key limitation in the current approach: as the number of documents in a group grows, the single centroid drifts toward the geometric centre of the embedding space and no longer represents the actual meaning of the group's documents. This makes cosine similarity search less accurate.
+
+> Current Implementation
+  - For every new normalised document, we first convert this to embedding and then do a cosine
+    similarity search against the group centroids (mean of all doc embeddings of that group)
+  - fetch k similar groups that are closest and return to the llm for classification 
+
+
+> Problem with the approach
+   - This above solution works well when number of docs in a group are less
+   - But if the number of docs in a group increases the centroid does not really reflect the actual meaning 
+     of the docs  it comes down to the geometric centre
+   - During cosine similarity search the doc is not actually representing the correct meaning of the group
+   - Also having just one centroid per group will compress all the information into a 756 dim embedding.
+
+<img width="1204" height="401" alt="image" src="https://github.com/user-attachments/assets/9d433522-9e96-4755-bcf1-055995691ddc" />
+
+> Planned solution to the above problem
+ - Instead of having one centroid per group, we can have multiple medoids per group
+ - Plan here is to implement kmeans clustering across a group
+ - this approach will significantly improve the precision since the medoids will always be at the centre
+   of the cluster representing the actual meaning of ther documents
+   
+<img width="1334" height="493" alt="image" src="https://github.com/user-attachments/assets/acbd4f09-f346-46cd-bfc3-64efc36443f8" />
+
+## Week 12 — Transforming Organisational Docs Using Doc AI Agent
+
+**`5/29/2026 – 6/4/2026`**
+
+> What Was Done
+-Presented a complete end-to-end demo of the project to the mentor.
+The demo used GitHub and Confluence as the two classification targets, walking through the full pipeline from document ingestion to classification.
+Explained the system architecture end-to-end, covering how documents are normalised, embedded, clustered using medoids, and classified via cosine similarity search.
+> 
+<img width="1181" height="585" alt="image" src="https://github.com/user-attachments/assets/02c784f8-f4ad-43af-b9f9-d47c78617cfd" />
+
+> Mentor Feedback
+- Build a search interface using RAG on top of the current system, allowing users to query across the classified documents.
+Extend the classification to a higher-level folder structure — currently documents are only classified by source (GitHub / Confluence). The new requirement is to also classify each document by type:
+Requirements
+Design
+Troubleshooting
+
+> Next Steps
+-Implement the higher-level document type classification layer (Requirements / Design / Troubleshooting) on top of the existing source-level  classification.
+Build out the RAG-based search interface
+
+_Last updated: June 2026_
