@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Iterable, Sequence
+from typing import Sequence
 
-from db.connection import get_connection
-from db.vector_queries import insert_chunks, insert_document, update_centroid
-from embedding.embedder import generate_embedding
+from classifier.ingestion.chunking import chunk_document
+from classifier.ingestion.detection import detect_doc_info
+from classifier.ingestion.embedding import embed_chunks
+from classifier.ingestion.prototypes import assign_group
+from classifier.ingestion.segments import build_segment_embeddings
+from db import get_connection, insert_new_group, write_to_db
 
 
 @dataclass(frozen=True)
@@ -32,91 +35,37 @@ def _compose_content(group_name: str, doc: SeedDoc) -> str:
     )
 
 
-def _avg_embedding(embeddings: Sequence[Sequence[float]]) -> list[float]:
-    if not embeddings:
-        raise ValueError("Cannot average empty embeddings")
-    size = len(embeddings[0])
-    totals = [0.0] * size
-    for emb in embeddings:
-        if len(emb) != size:
-            raise ValueError("Embedding sizes do not match")
-        for i, value in enumerate(emb):
-            totals[i] += float(value)
-    return [value / len(embeddings) for value in totals]
-
-
-def _chunk_text(text: str, max_chars: int = 800) -> list[str]:
-    paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
-    if not paragraphs:
-        return [text]
-    chunks: list[str] = []
-    current: list[str] = []
-    current_len = 0
-    for para in paragraphs:
-        if current_len + len(para) + 2 > max_chars and current:
-            chunks.append("\n\n".join(current))
-            current = [para]
-            current_len = len(para)
-        else:
-            current.append(para)
-            current_len += len(para) + 2
-    if current:
-        chunks.append("\n\n".join(current))
-    return chunks
-
-
-def _insert_groups(groups: Iterable[SeedGroup]) -> None:
-    with get_connection() as connection:
-        with connection.transaction():
-            with connection.cursor() as cursor:
-                for group in groups:
-                    cursor.execute(
-                        """
-                        INSERT INTO groups (id, name, centroid, doc_count)
-                        VALUES (%s, %s, NULL, 0)
-                        ON CONFLICT (id) DO UPDATE SET
-                            name = EXCLUDED.name
-                        """,
-                        [group.group_id, group.name],
-                    )
-
-
 def _seed_data(groups: Sequence[SeedGroup]) -> None:
-    _insert_groups(groups)
-
-    for group in groups:
-        doc_embeddings: list[list[float]] = []
-        chunk_rows: list[dict[str, object]] = []
-
-        for doc in group.docs:
-            content = _compose_content(group.name, doc)
-            embedding = list(generate_embedding(content))
-            doc_embeddings.append(embedding)
-
-            document_id = f"{group.group_id}:{doc.path}"
-            insert_document(
-                document_id=document_id,
-                path=doc.path,
-                group_id=group.group_id,
-                content=content,
-                embedding=embedding,
-            )
-
-            for chunk in _chunk_text(content):
-                chunk_rows.append(
-                    {
-                        "doc_id": document_id,
-                        "group_id": group.group_id,
-                        "chunk_text": chunk,
-                        "embedding": list(generate_embedding(chunk)),
-                    }
+    with get_connection() as conn:
+        with conn.transaction():
+            for group in groups:
+                insert_new_group(
+                    group.group_id,
+                    group.name,
+                    group_summary=f"Seed group for {group.name}",
+                    conn=conn,
                 )
 
-        if doc_embeddings:
-            centroid = _avg_embedding(doc_embeddings)
-            update_centroid(group.group_id, centroid, doc_count=len(doc_embeddings))
+                for doc in group.docs:
+                    content = _compose_content(group.name, doc)
+                    doc_info = detect_doc_info(content, title=doc.title)
+                    chunks = chunk_document(content, doc_info)
+                    embed_chunks(chunks)
+                    segments = build_segment_embeddings(chunks)
 
-        insert_chunks(chunk_rows)
+                    document_id = f"{group.group_id}:{doc.path}"
+                    write_to_db(
+                        conn,
+                        document_id,
+                        doc.path,
+                        group.group_id,
+                        content,
+                        len(segments),
+                        len(chunks),
+                        chunks,
+                        segments,
+                    )
+                    assign_group(document_id, group.group_id, segments, conn=conn)
 
 
 def build_seed_groups() -> list[SeedGroup]:
