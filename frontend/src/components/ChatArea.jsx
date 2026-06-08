@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Message from "./Message";
 import SearchResultCard from "./SearchResultCard";
+import { searchDocuments } from "../services/api";
 
 function ChatArea({ setSelectedDoc }) {
   const [messages, setMessages] = useState([
@@ -11,31 +12,51 @@ function ChatArea({ setSelectedDoc }) {
   ]);
 
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const sendMessage = () => {
-    if (!input.trim()) return;
+  const sendMessage = async () => {
+    if (!input.trim() || loading) return;
+
+    const userQuery = input;
+    setInput("");
 
     setMessages((prev) => [
       ...prev,
-      {
-        role: "user",
-        content: input,
-      },
-      {
-        role: "assistant",
-        content:
-          "I found documents related to retries in the payment-system.",
-        sources: [
-          {
-            title: "Payment Issue: Retry Logic",
-            source: "Jira",
-            similarity: 0.92,
-          },
-        ],
-      },
+      { role: "user", content: userQuery },
     ]);
 
-    setInput("");
+    setLoading(true);
+
+    try {
+      const data = await searchDocuments(userQuery);
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: data.results.length
+            ? `Found ${data.results.length} relevant chunk(s).`
+            : "No documents found for your query.",
+          sources: data.results ?? [],
+        },
+      ]);
+    } catch (err) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Something went wrong. Please try again.",
+          sources: [],
+        },
+      ]);
+      console.error("Search failed:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") sendMessage();
   };
 
   return (
@@ -46,24 +67,32 @@ function ChatArea({ setSelectedDoc }) {
             <Message message={msg} />
 
             {msg.sources &&
-              msg.sources.map((source) => (
+              msg.sources.map((source, i) => (
                 <SearchResultCard
-                  key={source.title}
-                  data={source}
+                  key={i}
+                  data={{
+                    title: `Document ${source.doc_id}`,
+                    source: `Similarity: ${(source.similarity * 100).toFixed(1)}%`,
+                    similarity: source.similarity,
+                  }}
                   onClick={() =>
                     setSelectedDoc({
-                      title: source.title,
-                      source: source.source,
-                      path:
-                        "root/payment-system/jira/ticket1.md",
-                      content:
-                        "Ticket tracks retry backoff for transient gateway errors and alerts.",
+                      title: `Document ${source.doc_id}`,
+                      source: `doc_id: ${source.doc_id}`,
+                      path: `doc_id: ${source.doc_id}`,
+                      content: source.chunk_text,
                     })
                   }
                 />
               ))}
           </div>
         ))}
+
+        {loading && (
+          <div className="message assistant">
+            <p>Searching documents...</p>
+          </div>
+        )}
       </div>
 
       <div className="chat-input">
@@ -71,10 +100,12 @@ function ChatArea({ setSelectedDoc }) {
           value={input}
           placeholder="Ask a question..."
           onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          disabled={loading}
         />
 
-        <button onClick={sendMessage}>
-          Send
+        <button onClick={sendMessage} disabled={loading}>
+          {loading ? "Searching..." : "Send"}
         </button>
       </div>
     </div>

@@ -6,18 +6,12 @@ import "./App.css";
 
 function App() {
   const [selectedDoc, setSelectedDoc] = useState(null);
-
-  // Temporary placeholder data until backend provides groups
-  const groups = [
-    { name: "Documents", docs: 0 },
-  ];
+  const [groups] = useState([{ name: "Documents", docs: 0 }]);
 
   return (
     <div className="app-container">
       <Sidebar groups={groups} />
-
       <ChatArea setSelectedDoc={setSelectedDoc} />
-
       {selectedDoc && (
         <DocumentViewer
           document={selectedDoc}
