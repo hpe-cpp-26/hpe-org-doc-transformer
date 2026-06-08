@@ -47,5 +47,14 @@ uvicorn app.main:app --reload
 4. Open Swagger UI:
 http://127.0.0.1:8000/docs
 
+### Alt method
+
+1. Start the FastAPI application:
+uvicorn app.main:app --reload
+
+2. Run the test
+python test_search.py
+
+
 
 
