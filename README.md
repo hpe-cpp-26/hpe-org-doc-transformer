@@ -1,16 +1,21 @@
 ## Search Service
 
-The Search Service implements the retrieval layer of the RAG (Retrieval-Augmented Generation) pipeline. It accepts a user query, generates embeddings using Ollama (`nomic-embed-text`), performs semantic similarity search on document embeddings stored in PostgreSQL with pgvector, and returns the most relevant document chunks.
+The Search Service implements the retrieval and response generation layer of the RAG (Retrieval-Augmented Generation) pipeline. It accepts a user query, generates embeddings using Ollama (`nomic-embed-text`), performs semantic similarity search on document embeddings stored in PostgreSQL with pgvector, re-ranks the retrieved results using a Cross-Encoder model, and generates a structured response using Gemini.
 
 ### Features
+
 - Semantic search using vector embeddings
-- Embedding generation through Ollama
+- Embedding generation through Ollama (`nomic-embed-text`)
 - PostgreSQL integration with pgvector
 - Cosine similarity-based retrieval
-- FastAPI REST endpoint for querying documents
-- Retrieval of top matching document chunks
+- Cross-Encoder re-ranking for improved relevance
+- Gemini-powered answer generation
+- Structured responses with summaries and key points
+- Source document tracking with document paths
+- Prompt injection safeguards for secure RAG responses
+- FastAPI REST API for document querying
 
-### Retrieval Flow
+### Retrieval Pipeline
 
 User Query  
 ↓  
@@ -20,7 +25,21 @@ Vector Similarity Search (pgvector)
 ↓  
 Retrieve Top Matching Chunks  
 ↓  
-Return Ranked Results  
+Cross-Encoder Re-ranking  
+↓  
+Generate Structured Answer (Gemini)  
+↓  
+Return Answer + Source Metadata
+
+### API Response
+
+The service returns:
+
+- Structured answer generated from retrieved context
+- Key points summary
+- Source document metadata (`doc_id`, `doc_path`)
+- Confidence score
+- Relevant source references
 
 ### Technologies Used
 - FastAPI
