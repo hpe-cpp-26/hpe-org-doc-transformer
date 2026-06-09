@@ -70,12 +70,15 @@ def _build_doc_path(base_path: str, group_name: str, doc_type: str, source: str,
 
 
 def _generate_group_name(state: ClassifierState, llm) -> str:
+    content_for_title = state.get("content") or ""
+    extracted_title = detect_doc_info(content_for_title, title=None).get("title") or "N/A"
+
     prompt_value = NEW_GROUP_NAME_PROMPT.invoke(
         {
-            "title": state.get("title", ""),
+            "title": extracted_title,
             "source": state.get("source", ""),
             "metadata": json.dumps(state.get("metadata") or {}, indent=2),
-            "content": (state.get("content") or "")[:3000],
+            "content": content_for_title[:5000],
         }
     )
     llm_response = llm.invoke(prompt_value)
@@ -104,15 +107,22 @@ async def create_new_group(state: ClassifierState) -> ClassifierState:
 
     try:
       
+        doc_id = state.get("doc_id") or "unknown-doc"
+        doc_filename = _doc_filename(doc_id)
+
+        content_for_title = state.get("content") or ""
+        extracted_title = detect_doc_info(content_for_title, title=None).get("title") or "N/A"
+
         prompt_value = NEW_GROUP_README_PROMPT.invoke(
             {
                 "group_name": group_name,
                 "group_description": group_description,
-                "title": state.get("title", "N/A"),
+                "title": extracted_title,
+                "filename": doc_filename,
                 "source": state.get("source", "N/A"),
                 "fingerprint": state.get("fingerprint", "N/A"),
                 "metadata": json.dumps(state.get("metadata") or {}, indent=2),
-                "content": (state.get("content") or "")[:3000],
+                "content": content_for_title[:5000],
             }
         )
         llm_response = llm.invoke(prompt_value)
@@ -159,7 +169,7 @@ async def create_new_group(state: ClassifierState) -> ClassifierState:
             group_uuid = str(uuid.uuid4())
 
             content = state.get("content") or ""
-            doc_info = detect_doc_info(content, title=state.get("title"))
+            doc_info = detect_doc_info(content, title=None)
 
 
 

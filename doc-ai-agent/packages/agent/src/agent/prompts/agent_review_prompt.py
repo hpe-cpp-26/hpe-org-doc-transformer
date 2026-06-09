@@ -14,7 +14,9 @@ PROCESS (minimize tool calls):
 1) Use the provided fingerprint, metadata, and content to shortlist the most
    likely candidate group(s).
 2) Call `fetch_group_readme` only for shortlisted groups to confirm fit.
-3) Call `search_group_chunks` only if README evidence is still ambiguous.
+3) DANGER: `search_group_chunks` (vector search) consumes high token limits.
+   ONLY call it for a shortlisted group if you strongly believe it is a match BUT the README lacks sufficient evidence to conclude.
+   If the README already has enough evidence to confirm or reject, DO NOT call `search_group_chunks`.
 4) Make the final decision.
 
 DECISION RULES:

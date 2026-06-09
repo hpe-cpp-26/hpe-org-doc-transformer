@@ -24,16 +24,17 @@ class GroqPool:
     Every call (invoke / ainvoke / stream) goes to the NEXT key.
     Call 1 → key[0], Call 2 → key[1], ..., Call N+1 → key[0]
     """
+    
+    _shared_counter = 0
+    _shared_lock = threading.Lock()
 
     def __init__(self, models: list[ChatGroq]) -> None:
         self._models = models
-        self._counter = 0
-        self._lock = threading.Lock()
 
     def _next(self) -> ChatGroq:
-        with self._lock:
-            idx = self._counter % len(self._models)
-            self._counter += 1
+        with self._shared_lock:
+            idx = self._shared_counter % len(self._models)
+            GroqPool._shared_counter += 1
         return self._models[idx]
 
   
