@@ -29,10 +29,7 @@ def _build_user_message(state: dict) -> str:
             "For EACH candidate group, you MUST call the tool "
             "`fetch_group_readme` using its group_name before deciding.\n"
             "Do NOT make a decision without reading all README contents.\n"
-            "API RATE LIMIT WARNING: Do NOT use `search_group_chunks` (vector search) for every group.\n"
-            "ONLY use it for groups that are highly likely to be a match AND only if their README "
-            "lacks sufficient evidence to make a confident decision. If the README "
-            "provides enough evidence to confirm or reject a group, skip vector search."
+            "If the README provides enough evidence to confirm or reject a group, skip vector search."
         )
 
     return f"""
