@@ -29,10 +29,7 @@ def _build_user_message(state: dict) -> str:
             "For EACH candidate group, you MUST call the tool "
             "`fetch_group_readme` using its group_name before deciding.\n"
             "Do NOT make a decision without reading all README contents.\n"
-            "If the README evidence is insufficient or ambiguous, you MAY call "
-            "`search_group_chunks` with group_id and doc_id to retrieve the most "
-            "relevant chunks for deeper comparison. Use it only when needed to "
-            "increase accuracy."
+            "If the README provides enough evidence to confirm or reject a group, skip vector search."
         )
 
     return f"""

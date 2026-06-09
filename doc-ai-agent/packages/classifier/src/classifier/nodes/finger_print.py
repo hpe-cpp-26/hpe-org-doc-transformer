@@ -36,7 +36,32 @@ def generate_fingerprint(state: ClassifierState) -> ClassifierState:
             parsed = json.loads(cleaned)
             if isinstance(parsed, dict):
                 if isinstance(parsed.get("fingerprint"), str):
-                    state["fingerprint"] = parsed["fingerprint"]
+                    rich_elements = []
+                    
+                    if parsed.get("project_identity"):
+                        rich_elements.append(f"Project Identity: {parsed['project_identity']}")
+                    if parsed.get("functional_domain"):
+                        rich_elements.append(f"Functional Domain: {parsed['functional_domain']}")
+                    if parsed.get("doc_intent"):
+                        rich_elements.append(f"Document Intent: {parsed['doc_intent']}")
+                    if parsed.get("lifecycle_stage"):
+                        rich_elements.append(f"Lifecycle Stage: {parsed['lifecycle_stage']}")
+                        
+                    tech_concepts = parsed.get("technical_concepts")
+                    if isinstance(tech_concepts, list) and tech_concepts:
+                        rich_elements.append(f"Technical Concepts: {', '.join(str(c) for c in tech_concepts)}")
+                        
+                    key_entities = parsed.get("key_entities")
+                    if isinstance(key_entities, list) and key_entities:
+                        rich_elements.append(f"Key Entities: {', '.join(str(e) for e in key_entities)}")
+                        
+                    aliases = parsed.get("cross_tool_aliases")
+                    if isinstance(aliases, list) and aliases:
+                        rich_elements.append(f"Cross-Tool Aliases: {', '.join(str(a) for a in aliases)}")
+                        
+                    rich_elements.append(f"Summary: {parsed['fingerprint']}")
+                    
+                    state["fingerprint"] = "\n".join(rich_elements)
                 else:
                     state["fingerprint"] = cleaned
                 

@@ -87,14 +87,21 @@ async def auto_assign(state: ClassifierState) -> ClassifierState:
 
         # --- 2. Generate updated README via LLM ---
         llm = get_llm(thinking=False)
+        doc_id = state.get("doc_id") or "unknown-doc"
+        doc_filename = doc_id if doc_id.lower().endswith(".md") else f"{doc_id}.md"
+
+        content_for_title = state.get("content") or ""
+        extracted_title = detect_doc_info(content_for_title, title=None).get("title") or "N/A"
+
         prompt_value = UPDATE_GROUP_README_PROMPT.invoke(
             {
                 "current_readme": current_readme,
-                "title": state.get("title", "N/A"),
+                "title": extracted_title,
+                "filename": doc_filename,
                 "source": state.get("source", "N/A"),
                 "fingerprint": state.get("fingerprint", "N/A"),
                 "metadata": json.dumps(state.get("metadata") or {}, indent=2),
-                "content": (state.get("content") or ""),
+                "content": content_for_title[:5000],
                 "today": date.today().isoformat(),
             }
         )
@@ -140,7 +147,7 @@ async def auto_assign(state: ClassifierState) -> ClassifierState:
         if group_id:
             try:
                 content = state.get("content") or ""
-                doc_info = detect_doc_info(content, title=state.get("title"))
+                doc_info = detect_doc_info(content, title=None)
                 doc_id = state.get("doc_id") or "unknown-doc"
                 base_path = get_settings().github_base_path
                 source = state.get("source") or "unknown-source"
