@@ -43,7 +43,7 @@ Confidence Score: ${data.confidence_score ?? "N/A"}%
         ...prev,
         {
           role: "assistant",
-          content: answerWithConfidence,
+          content: data.answer || "No answer generated.",
           sources: data.sources || [],
         },
       ]);
@@ -74,28 +74,18 @@ Confidence Score: ${data.confidence_score ?? "N/A"}%
       <div className="messages">
         {messages.map((msg, index) => (
           <div key={index}>
-            <Message message={msg} />
-
-            {msg.sources &&
-              msg.sources.map((source, i) => (
-                <SearchResultCard
-                  key={i}
-                  data={{
-                    title: source.doc_id,
-                    source: source.doc_path,
-                    similarity: 1,
-                  }}
-                  onClick={() =>
-                    setSelectedDoc({
-                      title: source.doc_id,
-                      source: source.doc_id,
-                      path: source.doc_path,
-                      url: source.url,
-                      content: source.doc_path,
-                    })
-                  }
-                />
-              ))}
+            <Message
+              message={msg}
+              onCiteClick={(source) =>
+                setSelectedDoc({
+                  title: `Document ${source.doc_id}`,
+                  source: `Similarity: ${(source.similarity * 100).toFixed(1)}%`,
+                  path: source.doc_path,
+                  content: source.chunk_text,
+                  url: source.url,
+                })
+              }
+            />
           </div>
         ))}
 

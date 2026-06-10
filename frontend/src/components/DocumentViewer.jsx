@@ -22,13 +22,9 @@ function DocumentViewer({ document, onClose }) {
 
       {document.url && (
         <p>
-          <strong>GitHub:</strong>{" "}
-          <a
-            href={document.url}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Open Document
+          <strong>Original Source:</strong>{" "}
+          <a href={document.url} target="_blank" rel="noreferrer" style={{ color: "#007bff", textDecoration: "underline" }}>
+            Open Link
           </a>
         </p>
       )}

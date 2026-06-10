@@ -30,12 +30,11 @@ def build_document_url(doc_id: str):
     "/search",
     response_model=SearchResponse
 )
-
 def search(request: SearchRequest):
     
     chunks = retrieve_chunks(
         query=request.query,
-        limit=5
+        limit=3
     )
     
     confidence_score=0
@@ -44,23 +43,25 @@ def search(request: SearchRequest):
         confidence_score= round(
             chunks[0]["similarity"] * 100
         )
+        
+    for chunk in chunks:
+        chunk["url"] = build_document_url(chunk["doc_id"])
     
     answer = generate_answer(
         request.query,
         chunks
     )
     
-    
     return {
         "answer": answer,
         "confidence_score": confidence_score,
         "sources": [
             {
-                "doc_id": chunk["doc_id"],
-                "doc_path": chunk["doc_path"],
-                "url": build_document_url(
-                    chunk["doc_id"]
-                )
+                "doc_id": chunk.get("doc_id", ""),
+                "doc_path": chunk.get("doc_path", ""),
+                "url": chunk.get("url", ""),
+                "chunk_text": chunk.get("chunk_text", ""),
+                "similarity": float(chunk.get("similarity", 0.0))
             }
             for chunk in chunks
         ]
