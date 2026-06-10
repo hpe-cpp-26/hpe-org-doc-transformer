@@ -1,7 +1,7 @@
 import requests
 import json
 
-url = 'http://127.0.0.1:8000/api/search'
+url = 'http://127.0.0.1:8001/api/search'
 payload = {'query': 'What is the tech stack for the payment system?'}
 headers = {'Content-Type': 'application/json'}
 

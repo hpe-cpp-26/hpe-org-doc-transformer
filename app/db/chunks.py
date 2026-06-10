@@ -26,7 +26,7 @@ def search_similar_chunks(
     )
     SELECT
         dc.doc_id,
-        d.doc_path,
+        d.path AS doc_path,
         dc.chunk_text,
         1 - (dc.embedding <=> q.vec) AS similarity
     FROM document_chunks dc

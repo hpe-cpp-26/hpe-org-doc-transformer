@@ -1,0 +1,135 @@
+* {
+  box-sizing: border-box;
+}
+
+.app-container {
+  display: flex;
+  height: 100vh;
+  width: 100%;
+  background-color: #f5f7fa;
+}
+
+.sidebar {
+  width: 280px;
+  padding: 20px;
+  border-right: 1px solid #ddd;
+  background: white;
+  overflow-y: auto;
+}
+
+.group-card {
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 8px;
+  background: #f3f4f6;
+  cursor: pointer;
+}
+
+.group-card:hover {
+  background: #e5e7eb;
+}
+
+.chat-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 20px;
+}
+
+.message {
+  max-width: 70%;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+}
+
+.message.user {
+  margin-left: auto;
+  background: #2563eb;
+  color: white;
+}
+
+.message.assistant {
+  background: #e5e7eb;
+}
+
+.chat-input {
+  display: flex;
+  gap: 10px;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.chat-input button {
+  padding: 12px 18px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  background: #2563eb;
+  color: white;
+}
+
+.chat-input button:hover {
+  background: #1d4ed8;
+}
+
+.search-card {
+  padding: 12px;
+  margin-top: 10px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  background: white;
+  cursor: pointer;
+}
+
+.search-card:hover {
+  background: #f9fafb;
+}
+
+.doc-viewer {
+  width: 350px;
+  padding: 20px;
+  border-left: 1px solid #ddd;
+  background: white;
+  overflow-y: auto;
+}
+
+.close-btn {
+  float: right;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.sources-toggle {
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 4px 10px;
+  margin: 6px 0;
+  font-size: 0.85rem;
+  cursor: pointer;
+  color: #555;
+}
+
+.sources-toggle:hover {
+  background: #f0f0f0;
+}
+
+.sources-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
