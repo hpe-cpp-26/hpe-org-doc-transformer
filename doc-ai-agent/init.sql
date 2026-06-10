@@ -2,7 +2,6 @@
 CREATE EXTENSION IF NOT EXISTS vector;
 
 
-
 CREATE TABLE IF NOT EXISTS groups (
     id TEXT PRIMARY KEY,
     group_name TEXT not NULL,
@@ -109,3 +108,13 @@ CREATE INDEX IF NOT EXISTS idx_documents_group_id
 CREATE INDEX IF NOT EXISTS document_chunks_embedding_hnsw_idx
     ON document_chunks
     USING hnsw (embedding vector_cosine_ops);
+
+-- Create a publication for all tables that need to be replicated to the RAG VM
+CREATE PUBLICATION rag_publication FOR TABLE 
+    groups, 
+    documents, 
+    document_segments, 
+    document_chunks, 
+    group_prototypes, 
+    prototype_buffer, 
+    doc_embedding_cache;
