@@ -22,13 +22,22 @@ function ChatArea({ setSelectedDoc }) {
 
     setMessages((prev) => [
       ...prev,
-      { role: "user", content: userQuery },
+      {
+        role: "user",
+        content: userQuery,
+      },
     ]);
 
     setLoading(true);
 
     try {
       const data = await searchDocuments(userQuery);
+
+      const answerWithConfidence = `
+${data.answer || "No answer returned."}
+
+Confidence Score: ${data.confidence_score ?? "N/A"}%
+      `.trim();
 
       setMessages((prev) => [
         ...prev,
@@ -39,6 +48,8 @@ function ChatArea({ setSelectedDoc }) {
         },
       ]);
     } catch (err) {
+      console.error("Search failed:", err);
+
       setMessages((prev) => [
         ...prev,
         {
@@ -47,14 +58,15 @@ function ChatArea({ setSelectedDoc }) {
           sources: [],
         },
       ]);
-      console.error("Search failed:", err);
     } finally {
       setLoading(false);
     }
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") sendMessage();
+    if (e.key === "Enter") {
+      sendMessage();
+    }
   };
 
   return (
