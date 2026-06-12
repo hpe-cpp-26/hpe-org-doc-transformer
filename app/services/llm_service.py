@@ -1,11 +1,9 @@
 import os
 import requests
-import google.generativeai as genai
+from google import genai
 from .prompts import RAG_PROMPT_TEMPLATE
 
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
-
-model = genai.GenerativeModel("gemini-2.5-flash")
+client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 
 
 def call_ollama(prompt: str):
@@ -58,7 +56,10 @@ def generate_answer(query: str, retrieval_output: dict):
             print("Google API Key not found or empty, falling back to Ollama")
             return f"{retrieval_confidence_str}\n\n{call_ollama(prompt)}"
             
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model="gemini-3.1-flash-lite",
+            contents=prompt
+        )
         return f"{retrieval_confidence_str}\n\n{response.text}"
     except Exception as e:
         print(f"Gemini generation failed: {e}. Falling back to Ollama.")
