@@ -30,25 +30,36 @@ def call_ollama(prompt: str):
         return "Sorry, unable to generate answer. Both Gemini and Ollama are unavailable."
 
 
-def generate_answer(query: str, chunks: list[dict]):
+def generate_answer(query: str, retrieval_output: dict):
+    #build the context string
+    context_str = "\n\n".join(
+        f"[Source {b['source_index']}] {b['doc_path']}\n{b['text']}"
+        for b in retrieval_output["context_blocks"]
+    )
 
-    context_parts = []
-    for i, chunk in enumerate(chunks[:3]):
-        url = chunk.get("url", chunk.get("doc_path", "Unknown Source"))
-        text = chunk["chunk_text"]
-        context_parts.append(f"Source [{i+1}] (URL: {url}):\n{text}")
-        
-    context = "\n\n".join(context_parts)
 
-    prompt = RAG_PROMPT_TEMPLATE.format(query=query, context=context)
+    sources_str = "\n".join(
+        f"[{idx}] {path}"
+        for idx, path in retrieval_output["citation_map"].items()
+    )
+
+    ret_conf = retrieval_output["retrieval_confidence"]
+    retrieval_confidence_str = (
+        f"**Retrieval Confidence: {ret_conf['band']} ({ret_conf['score']}%)** "
+        f"— {ret_conf['reason']}"
+    )
+
+    full_context = f"{retrieval_confidence_str}\n\n{context_str}\n\nSources:\n{sources_str}"
+
+    prompt = RAG_PROMPT_TEMPLATE.format(query=query, context=full_context)
     try:
         api_key = os.getenv("GOOGLE_API_KEY")
         if not api_key or api_key.strip() == "":
             print("Google API Key not found or empty, falling back to Ollama")
-            return call_ollama(prompt)
+            return f"{retrieval_confidence_str}\n\n{call_ollama(prompt)}"
             
         response = model.generate_content(prompt)
-        return response.text
+        return f"{retrieval_confidence_str}\n\n{response.text}"
     except Exception as e:
         print(f"Gemini generation failed: {e}. Falling back to Ollama.")
-        return call_ollama(prompt)
+        return f"{retrieval_confidence_str}\n\n{call_ollama(prompt)}"
