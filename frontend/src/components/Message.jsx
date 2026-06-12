@@ -6,9 +6,8 @@ function Message({ message, onCiteClick }) {
   const [showSources, setShowSources] = useState(false);
   const sources = message.sources || [];
 
-  const renderContent = (text) => {
+  const renderMarkdown = (text) => {
     if (!text) return null;
-    if (message.role === "user") return text;
 
     const processedText = text.replace(/\[(\d+)\](?!\()/g, "[$1](#cite-$1)");
 
@@ -23,15 +22,10 @@ function Message({ message, onCiteClick }) {
               if (source && onCiteClick) {
                 return (
                   <span
+                    className="cite-badge"
                     onClick={(e) => {
                       e.preventDefault();
                       onCiteClick(source);
-                    }}
-                    style={{
-                      color: "#007bff",
-                      cursor: "pointer",
-                      textDecoration: "underline",
-                      fontWeight: "bold",
                     }}
                     title={`View Source ${index + 1}`}
                   >
@@ -41,12 +35,7 @@ function Message({ message, onCiteClick }) {
               }
             }
             return (
-              <a
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                {...props}
-              >
+              <a href={href} target="_blank" rel="noopener noreferrer" {...props}>
                 {children}
               </a>
             );
@@ -59,76 +48,51 @@ function Message({ message, onCiteClick }) {
   };
 
   return (
-    <div
-      className={`message ${message.role === "user" ? "user" : "assistant"}`}
-      style={{ lineHeight: "1.5", overflowX: "auto" }}
-    >
-      {/* MESSAGE CONTENT */}
+    <div className={`message ${message.role === "user" ? "user" : "assistant"}`}>
       {message.role === "user" ? (
         <div style={{ whiteSpace: "pre-wrap" }}>{message.content}</div>
       ) : (
-        renderContent(message.content)
+        <div>
+          <div className="markdown-body">
+            {renderMarkdown(message.content)}
+          </div>
+
+          {message.confidence != null && (
+            <div className="confidence-tag">
+              Confidence: {message.confidence}%
+            </div>
+          )}
+        </div>
       )}
 
-      {/* SOURCES TOGGLE BUTTON */}
       {message.role === "assistant" && sources.length > 0 && (
         <button
+          className="sources-toggle"
           onClick={() => setShowSources(!showSources)}
-          style={{
-            marginTop: "6px",
-            fontSize: "12px",
-            background: "transparent",
-            border: "none",
-            cursor: "pointer",
-            color: "#666",
-          }}
         >
-          {showSources ? "Hide sources ▲" : `Sources (${sources.length}) ▼`}
+          {showSources ? "Hide sources" : `${sources.length} sources`}
         </button>
       )}
 
-      {/* SOURCES PANEL */}
       {showSources && sources.length > 0 && (
-        <div
-          style={{
-            marginTop: "10px",
-            paddingLeft: "10px",
-            borderLeft: "3px solid #ddd",
-          }}
-        >
+        <div className="sources-panel">
           {sources.map((s, index) => (
             <div
               key={index}
+              className="source-card"
               onClick={() => onCiteClick?.(s)}
-              style={{
-                marginBottom: "10px",
-                padding: "8px",
-                background: "#f9f9f9",
-                borderRadius: "6px",
-                cursor: "pointer",
-              }}
             >
-              <div style={{ fontWeight: "600" }}>
-                [{index + 1}] {s.title || s.doc_id}
-              </div>
-
-              {s.source && (
-                <div style={{ fontSize: "12px", color: "#555" }}>
-                  {s.source}
+              <div className="source-card-header">
+                <div className="source-card-title">
+                  <span className="source-icon">📄</span>
+                  {s.title || "Untitled"}
                 </div>
-              )}
-
-              {s.url && (
-                <a
-                  href={s.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  style={{ fontSize: "12px", color: "#007bff" }}
-                >
-                  Open source ↗
-                </a>
-              )}
+                {s.similarity != null && (
+                  <span className="source-card-similarity">
+                    {Math.round(s.similarity * 100)}%
+                  </span>
+                )}
+              </div>
             </div>
           ))}
         </div>

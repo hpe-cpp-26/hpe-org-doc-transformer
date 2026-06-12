@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import Message from "./Message";
 import { searchDocuments } from "../services/api";
 
@@ -13,14 +13,14 @@ const formatTitle = (doc_id) => {
 };
 
 function ChatArea({ setSelectedDoc }) {
-  const [messages, setMessages] = useState([
-    {
-      role: "assistant",
-      content: "Ask me anything about your documents.",
-    },
-  ]);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
 
   const sendMessage = async () => {
     if (!input.trim() || loading) return;
@@ -34,24 +34,18 @@ function ChatArea({ setSelectedDoc }) {
 
       const normalizedSources = (data.sources || []).slice(0, 3).map((s) => ({
         title: formatTitle(s.doc_id),
-        source: s.doc_path || "Unknown",
         path: s.doc_path || "",
         content: s.chunk_text || "No content available.",
         url: s.url || null,
         similarity: s.similarity ?? null,
       }));
 
-      const answerWithConfidence = `
-${data.answer || "No answer returned."}
-
-Confidence Score: ${data.confidence_score ?? "N/A"}%
-      `.trim();
-
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: answerWithConfidence,
+          content: data.answer || "No answer returned.",
+          confidence: data.confidence_score ?? null,
           sources: normalizedSources,
         },
       ]);
@@ -71,34 +65,47 @@ Confidence Score: ${data.confidence_score ?? "N/A"}%
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") sendMessage();
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
   };
 
   return (
     <div className="chat-area">
       <div className="messages">
-        {messages.map((msg, index) => (
-          <div key={index}>
-            <Message message={msg} onCiteClick={setSelectedDoc} />
-          </div>
-        ))}
-        {loading && (
-          <div className="message assistant">
-            <p>Searching documents...</p>
+        {messages.length === 0 && (
+          <div className="empty-state">
+            <p>Ask a question about your project documentation.</p>
           </div>
         )}
+        {messages.map((msg, index) => (
+          <Message key={index} message={msg} onCiteClick={setSelectedDoc} />
+        ))}
+        {loading && (
+          <div className="loading-indicator">
+            <div className="loading-dot" />
+            <div className="loading-dot" />
+            <div className="loading-dot" />
+            <span>Searching documentation…</span>
+          </div>
+        )}
+        <div ref={messagesEndRef} />
       </div>
-      <div className="chat-input">
-        <input
-          value={input}
-          placeholder="Ask a question..."
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={loading}
-        />
-        <button onClick={sendMessage} disabled={loading}>
-          {loading ? "Searching..." : "Send"}
-        </button>
+
+      <div className="chat-input-wrapper">
+        <div className="chat-input">
+          <input
+            value={input}
+            placeholder="Search documentation…"
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            disabled={loading}
+          />
+          <button onClick={sendMessage} disabled={loading}>
+            Search
+          </button>
+        </div>
       </div>
     </div>
   );

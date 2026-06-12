@@ -1,43 +1,32 @@
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 function DocumentViewer({ document, onClose }) {
   return (
     <div className="doc-viewer">
-      <span
-        className="close-btn"
-        onClick={onClose}
-      >
-        ✕
-      </span>
+      <div className="doc-viewer-header">
+        <h2>{document.title}</h2>
+        <span className="close-btn" onClick={onClose}>✕</span>
+      </div>
 
-      <h2>{document.title}</h2>
+      <div className="doc-viewer-meta">
 
-      <p>
-        <strong>Source:</strong>{" "}
-        {document.source}
-      </p>
+        {document.url && (
+          <div className="doc-meta-row">
+            <span className="label">Link</span>
+            <a href={document.url} target="_blank" rel="noreferrer">
+              Open in repository →
+            </a>
+          </div>
+        )}
+      </div>
 
-      <p>
-        <strong>Path:</strong>{" "}
-        {document.path}
-      </p>
-
-      {document.url && (
-        <p>
-          <strong>Original Source:</strong>{" "}
-          <a href={document.url} target="_blank" rel="noreferrer" style={{ color: "#007bff", textDecoration: "underline" }}>
-            Open Link
-          </a>
-        </p>
-      )}
-
-      <hr />
-
-      <div className="markdown-body" style={{ overflowX: 'auto', lineHeight: '1.6' }}>
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-          {document.content}
-        </ReactMarkdown>
+      <div className="doc-viewer-content">
+        <div className="markdown-body">
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {document.content}
+          </ReactMarkdown>
+        </div>
       </div>
     </div>
   );
