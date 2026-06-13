@@ -16,12 +16,12 @@
   --text-secondary: #4a4a4a;
   --text-muted: #8c8c8c;
   --text-faint: #b3b3b3;
-  --accent: #2563eb;
-  --accent-hover: #1d4ed8;
-  --accent-subtle: #eef4ff;
-  --accent-muted: #dbeafe;
-  --success: #16a34a;
-  --success-subtle: #dcfce7;
+  --accent: #475569;
+  --accent-hover: #334155;
+  --accent-subtle: #f8fafc;
+  --accent-muted: #e2e8f0;
+  --success: #475569;
+  --success-subtle: #f8fafc;
   --code-bg: #f4f3f0;
   --code-inline-color: #1e293b;
 
@@ -335,9 +335,9 @@ body {
   transition: width 0.4s ease;
 }
 
-.confidence-meter-fill.high { background: #22c55e; }
-.confidence-meter-fill.medium { background: #eab308; }
-.confidence-meter-fill.low { background: #ef4444; }
+.confidence-meter-fill.high { background: #64748b; }
+.confidence-meter-fill.medium { background: #94a3b8; }
+.confidence-meter-fill.low { background: #cbd5e1; }
 
 .confidence-meter-value {
   font-size: 11px;
@@ -653,21 +653,21 @@ body {
    Citation Badge (inline in markdown)
    ══════════════════════════════════════════════════ */
 .cite-badge {
-  color: var(--accent);
+  color: #2563eb;
   cursor: pointer;
   font-weight: 600;
-  background: var(--accent-subtle);
+  background: #eef4ff;
   padding: 1px 6px;
   border-radius: 3px;
   font-size: 0.85em;
   margin: 0 1px;
-  border: 1px solid var(--accent-muted);
+  border: 1px solid #dbeafe;
   transition: all 0.15s;
 }
 
 .cite-badge:hover {
-  background: var(--accent-muted);
-  border-color: var(--accent);
+  background: #dbeafe;
+  border-color: #2563eb;
 }
 
 /* ══════════════════════════════════════════════════
@@ -932,21 +932,21 @@ body {
 }
 
 .doc-viewer-relevance-badge.high {
-  color: #15803d;
-  background: #dcfce7;
-  border: 1px solid #bbf7d0;
+  color: #334155;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
 }
 
 .doc-viewer-relevance-badge.medium {
-  color: #a16207;
-  background: #fef9c3;
-  border: 1px solid #fde68a;
+  color: #475569;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
 }
 
 .doc-viewer-relevance-badge.low {
-  color: #b91c1c;
-  background: #fee2e2;
-  border: 1px solid #fecaca;
+  color: #64748b;
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
 }
 
 .relevance-dot {
@@ -1016,9 +1016,9 @@ body {
 }
 
 .doc-viewer-close-btn:hover {
-  background: #fee2e2;
-  border-color: #fecaca;
-  color: #dc2626;
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #334155;
 }
 
 .doc-viewer-close-btn svg {
