@@ -1,0 +1,47 @@
+version: "3.8"
+
+services:
+  ollama:
+    image: ollama/ollama:latest
+    container_name: doc-query-service-ollama
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - web
+    restart: unless-stopped
+
+  #FastAPI backend
+  backend:
+    build:
+      context: .
+      dockerfile: backend.Dockerfile
+    container_name: doc-query-service-backend
+    env_file:
+      - app/.env
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+      - DATABASE_URL
+    depends_on:
+      - ollama
+    networks:
+      - web
+    restart: unless-stopped
+
+  #React Frontend + Nginx
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+    container_name: doc-query-service-frontend
+    depends_on:
+      - backend
+    networks:
+      - web
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
+
+networks:
+  web:
+    external: true
