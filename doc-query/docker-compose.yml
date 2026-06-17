@@ -6,8 +6,8 @@ services:
     container_name: doc-query-service-ollama
     volumes:
       - ollama_data:/root/.ollama
-    ports:
-      - "11434:11434"
+    networks:
+      - web
     restart: unless-stopped
 
   #FastAPI backend
@@ -23,6 +23,8 @@ services:
       - DATABASE_URL
     depends_on:
       - ollama
+    networks:
+      - web
     restart: unless-stopped
 
   #React Frontend + Nginx
@@ -31,11 +33,15 @@ services:
       context: .
       dockerfile: frontend.Dockerfile
     container_name: doc-query-service-frontend
-    ports:
-      - "80:80"
     depends_on:
       - backend
+    networks:
+      - web
     restart: unless-stopped
 
 volumes:
   ollama_data:
+
+networks:
+  web:
+    external: true
