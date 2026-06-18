@@ -1,7 +1,8 @@
 const express = require('express');
 const axios = require('axios');
 require("dotenv").config();
-const cheerio = require("cheerio");
+const TurndownService = require("turndown");
+const { gfm } = require("turndown-plugin-gfm");
 
 const app = express();
 app.use(express.json());
@@ -10,27 +11,30 @@ const BASE_URL = process.env.CONFLUENCE_BASE_URL;
 const EMAIL = process.env.CONFLUENCE_EMAIL;
 const API_TOKEN = process.env.CONFLUENCE_API_TOKEN;
 
-function cleanHTML(html) {
-  const $ = cheerio.load(html);
+const turndownService = new TurndownService({
+  headingStyle: "atx",
+  codeBlockStyle: "fenced",
+  bulletListMarker: "-",
+});
+turndownService.use(gfm);
 
-  $("br").replaceWith("\n");
+// Handle Confluence-specific macros: code blocks wrapped in <ac:structured-macro>
+turndownService.addRule("confluenceCodeBlock", {
+  filter: function (node) {
+    return (
+      node.nodeName === "AC:STRUCTURED-MACRO" &&
+      node.getAttribute("ac:name") === "code"
+    );
+  },
+  replacement: function (content, node) {
+    const bodyNode = node.querySelector("ac\\:plain-text-body, ac\\:rich-text-body");
+    const code = bodyNode ? bodyNode.textContent : content;
+    return "\n```\n" + code.trim() + "\n```\n";
+  },
+});
 
-  $("p, div, h1, h2, h3, h4, h5, li").append("\n");
-
-  $("tr").each((_, row) => {
-    $(row).append("\n");
-  });
-
-  $("td, th").each((_, cell) => {
-    $(cell).append(" | ");
-  });
-
-  return $("body")
-    .text()
-    .replace(/\| \n/g, "\n")
-    .replace(/\n{2,}/g, "\n")
-    .replace(/[ \t]+/g, " ")
-    .trim();
+function convertHTMLToMarkdown(html) {
+  return turndownService.turndown(html).trim();
 }
 
 async function fetchPage(pageId, version = null) {
@@ -62,7 +66,7 @@ app.post("/enrich/confluence", async (req, res) => {
     const currentPage = await fetchPage(pageId);
     const currentVersion = currentPage.version.number;
 
-    const newContent = cleanHTML(currentPage.body.storage.value);
+    const newContent = convertHTMLToMarkdown(currentPage.body.storage.value);
 
     console.log("Current Version:", currentVersion);
     console.log("New Content:", newContent);
@@ -72,7 +76,7 @@ app.post("/enrich/confluence", async (req, res) => {
     if (currentVersion > 1) {
       try {
         const prevPage = await fetchPage(pageId, currentVersion - 1);
-        oldContent = cleanHTML(prevPage.body.storage.value);
+        oldContent = convertHTMLToMarkdown(prevPage.body.storage.value);
       } catch (err) {
         console.log("Previous version fetch failed:", err.message);
       }
