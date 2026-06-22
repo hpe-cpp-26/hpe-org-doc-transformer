@@ -4,7 +4,7 @@ from google import genai
 from .prompts import RAG_PROMPT_TEMPLATE
 
 client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
-
+gemini_model = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")
 
 def call_ollama(prompt: str):
     try:
@@ -57,7 +57,7 @@ def generate_answer(query: str, retrieval_output: dict):
             return f"{retrieval_confidence_str}\n\n{call_ollama(prompt)}"
             
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model=gemini_model,
             contents=prompt
         )
         return f"{retrieval_confidence_str}\n\n{response.text}"
