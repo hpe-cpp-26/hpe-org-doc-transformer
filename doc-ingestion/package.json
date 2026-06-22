@@ -16,7 +16,9 @@
     "cheerio": "^1.2.0",
     "diff": "^9.0.0",
     "dotenv": "^17.4.2",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "turndown": "^7.2.4",
+    "turndown-plugin-gfm": "^1.0.2"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"
