@@ -1,11 +1,14 @@
 import os
 import requests
 from google import genai
+from langsmith import traceable
+
 from .prompts import RAG_PROMPT_TEMPLATE
 
 client = genai.Client(api_key=os.getenv("GOOGLE_API_KEY"))
 gemini_model = os.getenv("GEMINI_MODEL", "gemini-3.1-flash-lite")
 
+@traceable
 def call_ollama(prompt: str):
     try:
         response = requests.post(
@@ -28,6 +31,7 @@ def call_ollama(prompt: str):
         return "Sorry, unable to generate answer. Both Gemini and Ollama are unavailable."
 
 
+@traceable
 def generate_answer(query: str, retrieval_output: dict):
     #build the context string
     context_str = "\n\n".join(

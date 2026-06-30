@@ -2,6 +2,7 @@ import logging
 from typing import Any
 
 import psycopg
+from langsmith import traceable
 
 from app.db.connection import get_connection, DatabaseConnectionError
 from app.db.utils import _vector_literal
@@ -16,6 +17,7 @@ class ResultList(list):
         for k, v in kwargs.items():
             setattr(self, k, v)
 
+@traceable
 def embed_query(query: str) -> list[float]:
     """
     Embed the incoming query using the SAME model used at ingestion.
@@ -24,6 +26,7 @@ def embed_query(query: str) -> list[float]:
     """
     return list(generate_embedding(query))
 
+@traceable
 def search_group_prototypes(
     query_embedding: list[float],
     top_k: int = 5,
@@ -73,6 +76,7 @@ def search_group_prototypes(
 
     return ResultList(results[:top_k], similarities=similarities[:top_k])
 
+@traceable
 def search_document_chunks(
     query_embedding: list[float],
     group_ids: list[str] | None,
@@ -279,6 +283,7 @@ def calculate_retrieval_confidence(
         "reason": reason
     }
 
+@traceable
 def retrieve(query: str) -> dict:
     """
     Full retrieval pipeline. This is the single entry point called by the RAG application.

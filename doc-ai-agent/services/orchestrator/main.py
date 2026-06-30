@@ -3,7 +3,11 @@
 import logging
 import asyncio
 import sys
+import os
 from typing import Any
+
+from dotenv import load_dotenv
+load_dotenv()
 
 from config import get_settings, configure_logging
 from doc_types.state import ClassifierState

@@ -8,3 +8,4 @@ python-dotenv==1.2.1
 requests==2.34.2
 google-genai==2.8.0
 sentence-transformers==5.1.2
+langsmith
