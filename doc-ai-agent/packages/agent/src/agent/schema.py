@@ -30,3 +30,11 @@ class SearchGroupChunksResponse(BaseModel):
     """
     group_id: str = Field(..., description="The ID of the GitHub group.")
     chunks: list[dict] = Field(..., description="A list of matching chunks with their metadata and similarity scores.")
+
+#[TODO][Dharshan][low]: global similarity search
+# class SearchSimilarChunksGlobalRequest(BaseModel):
+#     """
+#     Schema for the input to the search_similar_chunks_global tool.
+#     """
+#     doc_id: str = Field(..., description="The ID of the document for which we are searching relevant chunks.")
+#     limit: int = Field(3, description="The maximum number of chunks to return.")
