@@ -19,6 +19,8 @@
 - [Week 12 — Project: Implementation and Review](#week-12--transforming-organisational-docs-using-doc-ai-agent)
 - [Week 13 — Project: Implementation and Review](#week-12--transforming-organisational-docs-using-doc-ai-agent)
 - [Week 14 — Project: Implementation and Review](#week-12--transforming-organisational-docs-using-doc-ai-agent)
+- [Week 15 — Project: Implementation and Review](#week-12--transforming-organisational-docs-using-doc-ai-agent)
+- [Week 16-17 — Project: Implementation and Review](#week-12--transforming-organisational-docs-using-doc-ai-agent)
 
 
 ---
@@ -368,4 +370,15 @@ This week focused on production readiness, deployment, and database scalability 
 
 * Improved system scalability, reliability, and performance by isolating retrieval traffic from document ingestion and classification operations.
 
-_Last updated: June 2026_
+## Week 15 — Transforming Organisational Docs Using Doc AI Agent
+
+**`6/11/2026 – 6/18/2026`**
+This week focused on establishing a robust and automated CI/CD pipeline using GitHub Actions for the doc-query application. The primary goal was to streamline the deployment of the enterprise document transformer system to the Azure VM while ensuring code quality and application stability.
+
+## Week 16-17 — Transforming Organisational Docs Using Doc AI Agent
+
+**`6/18/2026 – 7/2/2026`**
+
+This week focused on enhancing the reliability and fault tolerance of the multi-source ingestion pipeline. Previously, transient API failures or unhandled exceptions within the ingestion and normalization consumers resulted in silent data loss. To resolve this, a robust Dead Letter Queue (DLQ) architecture was implemented, ensuring zero data loss and enabling the safe replay of messages during system recovery.
+
+_Last updated: July 2026_
